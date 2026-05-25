@@ -27,7 +27,9 @@ import { updateFreqIndicators, clearFreqIndicators, reinstallFreqAfterRender } f
 import { updateAliasingAlert, getSampledPoints, aliasState } from './ui/aliasing.js';
 
 import { initParamsBoard, refreshParamsBoard } from './ui/params-board.js';
+import { initTooltips } from './ui/tooltips.js';
 import { initSidebarToggle } from './ui/sidebar-toggle.js';
+import { initNotebook } from './ui/notebook.js';
 
 // ─── COMPUTE PIPELINE ────────────────────────────────────────────
 function computeSignal(signal) {
@@ -227,8 +229,10 @@ function boot() {
 
         initControls(state, () => notify());
         renderExtraControls(state, () => notify());
-        initParamsBoard();
+        initTooltips();
         initSidebarToggle();
+        initNotebook();
+        initParamsBoard();
         initFormulaResize();
 
         let lastNotifyTime = 0;

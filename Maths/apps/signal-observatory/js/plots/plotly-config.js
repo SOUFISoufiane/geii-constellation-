@@ -54,8 +54,8 @@ export const PALETTE = new Proxy({}, {
             case 'orange':  return cssVar('--accent-orange',  FALLBACK.orange);
             case 'textDim': return cssVar('--text-dim',       FALLBACK.textDim);
             case 'textMid': return cssVar('--text-mid',       FALLBACK.textMid);
-            case 'bgGrid':  return 'rgba(28,28,68,0.7)';   // grid is theme-independent for plot clarity
-            case 'bgZero':  return 'rgba(45,45,90,1)';
+            case 'bgGrid':  return document?.body?.classList.contains('theme-print') ? '#eeeeee' : 'rgba(28,28,68,0.7)';
+            case 'bgZero':  return document?.body?.classList.contains('theme-print') ? '#cccccc' : 'rgba(45,45,90,1)';
             default:        return undefined;
         }
     }
@@ -141,7 +141,10 @@ export function baseLayoutLegend(overrides = {}) {
 }
 
 export const PLOTLY_CONFIG = {
-    displayModeBar: false,
+    displayModeBar: 'hover',
+    displaylogo: false,
+    modeBarButtonsToRemove: ['lasso2d', 'select2d', 'autoScale2d'],
+    toImageButtonOptions: { format: 'png', filename: 'signal_export', height: 800, width: 1200, scale: 2 },
     responsive: true,
     staticPlot: false,
     doubleClick: 'reset'

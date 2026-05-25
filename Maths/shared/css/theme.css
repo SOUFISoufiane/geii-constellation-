@@ -104,6 +104,38 @@ body.theme-solarized {
     --text-glow:   #fdf6e3;
 }
 
+/* PRINT MODE — Clean white for PDF export/printing */
+body.theme-print {
+    --void:        #ffffff;
+    --void-soft:   #f8f9fa;
+    --nebula-1:    #ffffff;
+    --nebula-2:    #f0f0f0;
+    --nebula-3:    #e0e0e0;
+    --rim:         #cccccc;
+    --rim-bright:  #aaaaaa;
+
+    --accent-blue:    #0d47a1;
+    --accent-purple:  #4a148c;
+    --accent-cyan:    #00838f;
+    --accent-red:     #c62828;
+    --accent-gold:    #f57f17;
+    --accent-magenta: #ad1457;
+    --accent-green:   #2e7d32;
+    --accent-orange:  #e65100;
+
+    --text-dim:    #757575;
+    --text-mid:    #424242;
+    --text-bright: #000000;
+    --text-glow:   #000000;
+}
+
+body.theme-print::before,
+body.theme-print::after,
+body.theme-print .hud-scanlines,
+body.theme-print .vignette {
+    display: none !important;
+}
+
 /* Apply intensities to specific elements */
 .hud-scanlines {
     position: fixed;

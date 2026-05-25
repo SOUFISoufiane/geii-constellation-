@@ -119,6 +119,18 @@
                     <div id="formula-demarche" style="display:none; margin-top:8px;"></div>
                 </div>
 
+                <!-- Tier 3: Notebook -->
+                <div class="formula-section" id="formula-notebook-section">
+                    <div class="formula-label demarche-toggle" id="notebook-toggle" style="cursor:pointer; user-select:none;">
+                        <span id="notebook-arrow">▸</span> NOTEBOOK — snapshots
+                    </div>
+                    <div id="notebook-container" style="display:none; margin-top:8px;">
+                        <input type="text" id="notebook-note" placeholder="Note pour ce snapshot..." style="width:100%; padding:4px; background:transparent; color:var(--text-bright); border:1px solid var(--rim); font-family:inherit; font-size:11px; margin-bottom:4px; border-radius:2px;">
+                        <button id="notebook-save" style="width:100%; padding:4px; background:rgba(0,245,212,0.1); border:1px solid var(--accent-cyan); color:var(--accent-cyan); cursor:pointer; font-family:inherit; font-size:10px; border-radius:2px;">💾 SAUVEGARDER L'ÉTAT</button>
+                        <div id="notebook-list" style="margin-top:8px; display:flex; flex-direction:column; gap:4px; font-size:11px; max-height:200px; overflow-y:auto;"></div>
+                    </div>
+                </div>
+
                 <!-- Tier 1 Phase 5 (D): Glossary -->
                 <div class="formula-section" id="formula-glossary-section"></div>
             </div>
@@ -304,6 +316,7 @@
                             <option value="cosmic">Cosmic (Noir Profond)</option>
                             <option value="theme-amber">Amber CRT (Rétro)</option>
                             <option value="theme-solarized">Solarized (Scientifique)</option>
+                            <option value="theme-print">Print / Light (Blanc)</option>
                         </select>
                     </div>
                     <div class="params-row">
