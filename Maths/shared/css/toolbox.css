@@ -1,0 +1,295 @@
+/* ═══════════════════════════════════════════════════════════════════
+ *  GEII TOOLBOX — Shared UI primitives
+ *  • App header (back-to-home + theme cycler) injected by app-header.js
+ *  • Generic card / panel styles usable by every app
+ *  • All colors flow through theme.css variables
+ * ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── APP HEADER (shared across all apps) ─────────────────────────────
+ * Positioned ABSOLUTELY at the top of the viewport so it overlays any
+ * pre-existing app layout (Signal Observatory uses a row-flex body with
+ * sidebar+main). Apps that have a full-height sidebar should expose a
+ * --app-header-h custom property so their internal layout can reserve
+ * space below — see signal-observatory's components.css.
+ * ───────────────────────────────────────────────────────────────────── */
+:root { --app-header-h: 36px; }
+
+#geii-app-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    height: var(--app-header-h);
+    padding: 0 14px;
+    gap: 10px;
+    background: linear-gradient(180deg,
+        rgba(8, 8, 28, 0.85) 0%,
+        rgba(5, 5, 20, 0.75) 100%);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--rim);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--text-mid);
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+}
+
+body.theme-amber #geii-app-header {
+    background: linear-gradient(180deg, rgba(20, 12, 0, 0.9), rgba(15, 8, 0, 0.75));
+}
+body.theme-solarized #geii-app-header {
+    background: linear-gradient(180deg, rgba(0, 43, 54, 0.92), rgba(7, 54, 66, 0.75));
+}
+
+#geii-app-header .gh-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    color: var(--text-bright);
+    text-decoration: none;
+    border: 1px solid var(--rim);
+    border-radius: 4px;
+    transition: background 120ms, border-color 120ms, transform 120ms;
+}
+#geii-app-header .gh-back:hover {
+    background: var(--rim);
+    border-color: var(--accent-blue);
+    transform: translateX(-2px);
+}
+#geii-app-header .gh-arrow {
+    color: var(--accent-blue);
+    font-size: 0.95rem;
+    line-height: 1;
+}
+#geii-app-header .gh-back-label {
+    font-weight: 600;
+    letter-spacing: 0.12em;
+}
+
+#geii-app-header .gh-sep {
+    width: 1px;
+    height: 18px;
+    background: var(--rim);
+}
+
+#geii-app-header .gh-app {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 10px;
+    min-width: 0;
+}
+#geii-app-header .gh-icon {
+    font-size: 1rem;
+    line-height: 1;
+}
+#geii-app-header .gh-name {
+    color: var(--text-glow);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.88rem;
+}
+#geii-app-header .gh-tagline {
+    color: var(--text-dim);
+    font-size: 0.78rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 50ch;
+}
+
+#geii-app-header .gh-spacer { flex: 1; }
+
+#geii-app-header .gh-theme {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: transparent;
+    border: 1px solid var(--rim);
+    border-radius: 4px;
+    color: var(--text-bright);
+    font-family: inherit;
+    font-size: 0.80rem;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: background 120ms, border-color 120ms;
+}
+#geii-app-header .gh-theme:hover {
+    background: var(--rim);
+    border-color: var(--accent-cyan);
+}
+#geii-app-header .gh-theme-icon { font-size: 0.9rem; }
+
+/* ─── SHARE BUTTON (URL state sync) ───────────────────────────────── */
+#geii-app-header .gh-share {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    margin-right: 8px;
+    background: transparent;
+    border: 1px solid var(--rim);
+    border-radius: 4px;
+    color: var(--text-bright);
+    font-family: inherit;
+    font-size: 0.80rem;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: background 120ms, border-color 120ms, color 120ms;
+}
+#geii-app-header .gh-share:hover {
+    background: var(--rim);
+    border-color: var(--accent-cyan);
+}
+#geii-app-header .gh-share-icon { font-size: 0.9rem; }
+#geii-app-header .gh-share.gh-share-ok {
+    border-color: #4ade80;
+    color: #4ade80;
+}
+#geii-app-header .gh-share.gh-share-err {
+    border-color: #f87171;
+    color: #f87171;
+}
+
+/* ─── GENERIC CARD ────────────────────────────────────────────────── */
+.toolbox-card {
+    background: rgba(13, 13, 40, 0.55);
+    border: 1px solid var(--rim);
+    border-radius: 8px;
+    padding: 18px;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    transition: border-color 200ms, transform 200ms;
+}
+.toolbox-card:hover {
+    border-color: var(--accent-blue);
+}
+
+/* ─── STUB PAGE (used by placeholder apps) ────────────────────────── */
+.stub-page {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+    position: relative;
+    z-index: 10;
+}
+.stub-card {
+    max-width: 640px;
+    background: rgba(8, 8, 28, 0.85);
+    border: 1px solid var(--rim-bright);
+    border-radius: 14px;
+    padding: 36px 40px;
+    color: var(--text-bright);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+}
+.stub-card .stub-icon {
+    font-size: 3rem;
+    line-height: 1;
+    color: var(--accent-gold);
+    margin-bottom: 14px;
+}
+.stub-card h1 {
+    margin: 0 0 6px 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 1.6rem;
+    color: var(--text-glow);
+    letter-spacing: 0.02em;
+}
+.stub-card .stub-tagline {
+    color: var(--text-mid);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    letter-spacing: 0.06em;
+    margin-bottom: 22px;
+}
+.stub-card .stub-status {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--accent-gold);
+    color: var(--accent-gold);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.80rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 22px;
+}
+.stub-card .stub-desc {
+    color: var(--text-bright);
+    line-height: 1.6;
+    margin-bottom: 22px;
+}
+.stub-card h2 {
+    font-size: 0.88rem;
+    color: var(--text-mid);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin: 18px 0 10px;
+    font-family: 'Space Mono', monospace;
+    font-weight: 500;
+}
+.stub-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.stub-card ul li {
+    padding: 6px 0 6px 22px;
+    position: relative;
+    color: var(--text-bright);
+    font-size: 0.88rem;
+    border-bottom: 1px dashed var(--rim);
+}
+.stub-card ul li:last-child { border-bottom: none; }
+.stub-card ul li::before {
+    content: '▸';
+    position: absolute;
+    left: 4px;
+    color: var(--accent-blue);
+}
+.stub-card .stub-matieres {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+.stub-card .stub-matiere {
+    padding: 3px 9px;
+    border-radius: 4px;
+    background: var(--rim);
+    color: var(--text-bright);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.80rem;
+    letter-spacing: 0.05em;
+}
+.stub-card .stub-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 22px;
+    padding: 10px 18px;
+    background: var(--accent-blue);
+    color: var(--void);
+    text-decoration: none;
+    border-radius: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    transition: transform 120ms, box-shadow 120ms;
+}
+.stub-card .stub-cta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(79, 140, 255, 0.4);
+}

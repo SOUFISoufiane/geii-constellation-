@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Visualizer — GEII Toolbox</title>
+
+    <link rel="stylesheet" href="../../shared/css/theme.css">
+    <link rel="stylesheet" href="../../shared/css/toolbox.css">
+    <script>
+        document.querySelectorAll('link[rel="stylesheet"]').forEach(l => {
+            const h = l.getAttribute('href');
+            if (h && !h.startsWith('http')) l.href = h + '?v=' + Date.now();
+        });
+    </script>
+    <style>
+        body { display: flex; flex-direction: column; padding-top: var(--app-header-h, 36px); }
+        .hud-scanlines, .vignette { position: fixed; inset: 0; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <div class="hud-scanlines"></div>
+    <div class="vignette"></div>
+
+    <script type="module">
+        const v = Date.now();
+        const { mountAppHeader } = await import(`../../shared/js/app-header.js?v=${v}`);
+        const { renderStub } = await import(`../../shared/js/stub-render.js?v=${v}`);
+        mountAppHeader('maths');
+        renderStub('maths', [
+            'Résolveur visuel d’équations différentielles (1er et 2nd ordre)',
+            'Transformée de Laplace pas-à-pas : tableau usuel + table interactive',
+            'Champs de vecteurs + portraits de phase pour systèmes 2D',
+            'Espaces vectoriels : visualisation 2D/3D de bases, projections, changements',
+            'Suites & séries : tests de convergence avec rayon animé',
+            'Nombres complexes : plan d’Argand interactif, exponentielle complexe',
+            'Algèbre linéaire : déterminant comme aire, valeurs propres comme directions'
+        ]);
+    </script>
+</body>
+</html>

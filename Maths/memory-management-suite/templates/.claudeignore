@@ -1,0 +1,84 @@
+# Dependencies & build artifacts
+node_modules/
+dist/
+build/
+.next/
+out/
+target/
+__pycache__/
+.venv/
+venv/
+
+# Lockfiles (large, regenerable, noise during indexing)
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+poetry.lock
+Cargo.lock
+Gemfile.lock
+composer.lock
+
+# Version control & IDE
+.git/
+.idea/
+.vscode/
+.fleet/
+
+# Heavy media assets
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.mp4
+*.webm
+*.mov
+*.svg
+*.ico
+*.webp
+*.avif
+
+# Database binaries
+*.db
+*.sqlite
+*.sqlite3
+
+# Compiled artifacts
+*.pyc
+*.class
+*.o
+*.so
+*.dll
+*.exe
+
+# Environment files (extra safety; never index secrets)
+.env
+.env.*
+
+# Coverage & test artifacts
+coverage/
+.nyc_output/
+.pytest_cache/
+htmlcov/
+
+# Logs
+*.log
+logs/
+
+# Editors
+*.swp
+*.swo
+~$*
+.DS_Store
+Thumbs.db
+NUL
+
+# Office docs (rarely needed in context)
+*.docx
+*.pdf
+*.xlsx
+*.pptx
+
+# Project-specific large files
+# Add seed-data files, fixtures, generated code paths here:
+# data/large-seed.json
+# fixtures/*.bin

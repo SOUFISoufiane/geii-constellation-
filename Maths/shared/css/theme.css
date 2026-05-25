@@ -1,0 +1,288 @@
+/* ═══════════════════════════════════════════════════════════════════
+ *  SIGNAL OBSERVATORY v5 — COSMIC THEME
+ *  Black hole gravitational lensing + nebula + accretion disk
+ * ═══════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+    /* — VOID & NEBULA — */
+    --void:        #000008;
+    --void-soft:   #02020e;
+    --nebula-1:    #050514;
+    --nebula-2:    #08081c;
+    --nebula-3:    #0d0d28;
+    --rim:         #1c1c44;
+    --rim-bright:  #2a2a5e;
+
+    /* — ACCENTS — */
+    --accent-blue:    #4f8cff;
+    --accent-purple:  #9b5de5;
+    --accent-cyan:    #00f5d4;
+    --accent-red:     #ff4d6d;
+    --accent-gold:    #ffd60a;
+    --accent-magenta: #ff006e;
+    --accent-green:   #06ffa5;
+    --accent-orange:  #ff8500;
+
+    /* — TEXT — */
+    --text-dim:    #4a5680;
+    --text-mid:    #8899c8;
+    --text-bright: #d0deff;
+    --text-glow:   #e8f0ff;
+
+    /* — DOMAIN COLORS (Extras) — */
+    --domain-geii:       #4f8cff;
+    --domain-electrical: #ffd60a;
+    --domain-ai:         #06ffa5;
+    --domain-automation: #ff006e;
+
+    /* — DIMENSIONS — */
+    --sidebar-w:    280px;
+    --topbar-h:     58px;
+    --strip-h:      44px;
+
+    /* — VFX CONTROLS — */
+    --bloom-intensity: 1.0;
+    --scanline-opacity: 0.012;
+}
+
+/* ─── THEMES ────────────────────────────────────────────────────── */
+
+/* AMBER CRT — Retro Terminal */
+body.theme-amber {
+    --void:        #120b00;
+    --void-soft:   #1a1200;
+    --nebula-1:    #1c1400;
+    --nebula-2:    #221800;
+    --nebula-3:    #2a1c00;
+    --rim:         #443300;
+    --rim-bright:  #5e4400;
+
+    --accent-blue:    #ffb000; /* Amber overrides everything */
+    --accent-purple:  #ffb000;
+    --accent-cyan:    #ffb000;
+    --accent-red:     #ff4400;
+    --accent-gold:    #ffd60a;
+    --accent-magenta: #ffcc00;
+    --accent-green:   #eeff00;
+    --accent-orange:  #ff8500;
+
+    --text-dim:    #856200;
+    --text-mid:    #c49b00;
+    --text-bright: #ffcc00;
+    --text-glow:   #fff0b3;
+    
+    --domain-geii:       #ffb000;
+    --domain-electrical: #ffb000;
+    --domain-ai:         #ffb000;
+    --domain-automation: #ffb000;
+}
+
+/* SOLARIZED — Scientific High-Contrast */
+body.theme-solarized {
+    --void:        #002b36;
+    --void-soft:   #073642;
+    --nebula-1:    #073642;
+    --nebula-2:    #002b36;
+    --nebula-3:    #586e75;
+    --rim:         #657b83;
+    --rim-bright:  #93a1a1;
+
+    --accent-blue:    #268bd2;
+    --accent-purple:  #6c71c4;
+    --accent-cyan:    #2aa198;
+    --accent-red:     #dc322f;
+    --accent-gold:    #b58900;
+    --accent-magenta: #d33682;
+    --accent-green:   #859900;
+    --accent-orange:  #cb4b16;
+
+    --text-dim:    #586e75;
+    --text-mid:    #839496;
+    --text-bright: #eee8d5;
+    --text-glow:   #fdf6e3;
+}
+
+/* Apply intensities to specific elements */
+.hud-scanlines {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        180deg,
+        transparent 0,
+        transparent 3px,
+        rgba(79,140,255, var(--scanline-opacity)) 3px,
+        rgba(79,140,255, var(--scanline-opacity)) 4px
+    );
+}
+
+body.theme-amber .hud-scanlines {
+    background: repeating-linear-gradient(
+        180deg,
+        transparent 0,
+        transparent 2px,
+        rgba(255,176,0, calc(var(--scanline-opacity) * 4)) 2px,
+        rgba(255,176,0, calc(var(--scanline-opacity) * 4)) 3px
+    );
+}
+
+/* Global Bloom via filter on main app container */
+#main {
+    filter: drop-shadow(0 0 calc(2px * var(--bloom-intensity)) var(--accent-blue));
+}
+body.theme-amber #main {
+    filter: drop-shadow(0 0 calc(3px * var(--bloom-intensity)) var(--accent-bright));
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--void);
+    color: var(--text-bright);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    -webkit-font-smoothing: antialiased;
+}
+
+body {
+    display: flex;
+    flex-direction: row;
+    position: relative;
+}
+
+/* ─── COSMIC BACKGROUND LAYERS ─────────────────────────────────── */
+
+/* Starfield — multi-depth parallax stars */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+        radial-gradient(1px 1px at 8% 12%,  rgba(255,255,255,0.7) 0%, transparent 100%),
+        radial-gradient(1px 1px at 21% 68%, rgba(200,220,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 47% 28%, rgba(255,255,255,0.6) 0%, transparent 100%),
+        radial-gradient(1px 1px at 73% 82%, rgba(180,200,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 88% 41%, rgba(255,255,255,0.7) 0%, transparent 100%),
+        radial-gradient(2px 2px at 13% 47%, rgba(100,150,255,0.4) 0%, transparent 100%),
+        radial-gradient(2px 2px at 58% 8%,  rgba(150,100,255,0.4) 0%, transparent 100%),
+        radial-gradient(2px 2px at 83% 17%, rgba(100,200,255,0.4) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 33% 88%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 68% 57%, rgba(200,180,255,0.5) 0%, transparent 100%),
+        radial-gradient(3px 3px at 5% 80%,  rgba(255,200,150,0.3) 0%, transparent 100%),
+        radial-gradient(2.5px 2.5px at 92% 92%, rgba(180,255,200,0.3) 0%, transparent 100%);
+    animation: stars-drift 240s linear infinite;
+}
+
+@keyframes stars-drift {
+    from { background-position: 0 0; }
+    to   { background-position: -100px 100px; }
+}
+
+/* Black hole singularity — top-right with accretion disk */
+body::after {
+    content: '';
+    position: fixed;
+    top: -32%;
+    right: -22%;
+    width: 800px;
+    height: 800px;
+    z-index: 0;
+    pointer-events: none;
+    border-radius: 50%;
+    background:
+        /* Event horizon (pure black) */
+        radial-gradient(circle, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 16%, transparent 17%),
+        /* Photon ring (bright orange-yellow) */
+        radial-gradient(circle, transparent 17%, rgba(255,180,80,0.4) 18%, transparent 21%),
+        /* Inner accretion (red-orange) */
+        radial-gradient(circle, transparent 21%, rgba(255,100,40,0.25) 24%, transparent 30%),
+        /* Mid accretion (purple-magenta) */
+        radial-gradient(circle, transparent 30%, rgba(155,93,229,0.2) 35%, transparent 45%),
+        /* Outer halo (deep blue) */
+        radial-gradient(circle, transparent 45%, rgba(79,140,255,0.1) 55%, transparent 75%);
+    animation: bh-pulse 12s ease-in-out infinite, bh-rotate 90s linear infinite;
+    filter: blur(0.3px);
+}
+
+@keyframes bh-pulse {
+    0%, 100% { transform: scale(1)     rotate(0deg); opacity: 0.9; }
+    50%      { transform: scale(1.04) rotate(180deg); opacity: 1; }
+}
+
+@keyframes bh-rotate {
+    from { filter: blur(0.3px) hue-rotate(0deg); }
+    to   { filter: blur(0.3px) hue-rotate(360deg); }
+}
+
+/* HUD scanlines (subtle horizontal lines) */
+.hud-scanlines {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        180deg,
+        transparent 0,
+        transparent 3px,
+        rgba(79,140,255,0.012) 3px,
+        rgba(79,140,255,0.012) 4px
+    );
+}
+
+/* Vignette */
+.vignette {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center,
+        transparent 30%,
+        rgba(0,0,5,0.4) 80%,
+        rgba(0,0,5,0.7) 100%);
+}
+
+/* ─── TYPOGRAPHY ────────────────────────────────────────────────── */
+
+.mono { font-family: 'Space Mono', monospace; }
+.code { font-family: 'JetBrains Mono', monospace; }
+
+/* ─── SCROLLBAR ─────────────────────────────────────────────────── */
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--rim), var(--rim-bright));
+    border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--accent-blue); }
+
+/* ─── KATEX OVERRIDES ────────────────────────────────────────────── */
+
+.katex { color: inherit !important; font-size: 1em !important; }
+.katex-display { margin: 0.4em 0 !important; }
+.katex-display > .katex { font-size: 1.05em !important; }
+
+/* ─── UTILITY ───────────────────────────────────────────────────── */
+
+.flex-row { display: flex; flex-direction: row; }
+.flex-col { display: flex; flex-direction: column; }
+.gap-4 { gap: 0.25rem; }
+.gap-8 { gap: 0.5rem; }
+.gap-12 { gap: 0.75rem; }
+.flex-1 { flex: 1; min-height: 0; min-width: 0; }
+.flex-shrink-0 { flex-shrink: 0; }
+.full-h { height: 100%; }
+.full-w { width: 100%; }
+.relative { position: relative; }
+.absolute { position: absolute; }
+.no-select { user-select: none; }
+.pointer { cursor: pointer; }

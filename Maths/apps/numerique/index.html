@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Lab — GEII Toolbox</title>
+
+    <link rel="stylesheet" href="../../shared/css/theme.css">
+    <link rel="stylesheet" href="../../shared/css/toolbox.css">
+    <script>
+        document.querySelectorAll('link[rel="stylesheet"]').forEach(l => {
+            const h = l.getAttribute('href');
+            if (h && !h.startsWith('http')) l.href = h + '?v=' + Date.now();
+        });
+    </script>
+    <style>
+        body { display: flex; flex-direction: column; padding-top: var(--app-header-h, 36px); }
+        .hud-scanlines, .vignette { position: fixed; inset: 0; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <div class="hud-scanlines"></div>
+    <div class="vignette"></div>
+
+    <script type="module">
+        const v = Date.now();
+        const { mountAppHeader } = await import(`../../shared/js/app-header.js?v=${v}`);
+        const { renderStub } = await import(`../../shared/js/stub-render.js?v=${v}`);
+        mountAppHeader('numerique');
+        renderStub('numerique', [
+            'Éditeur visuel de tables de vérité (jusqu’à 6 variables)',
+            'Diagrammes de Karnaugh : groupements automatiques + simplification',
+            'Simulateur de circuits logiques (NAND, NOR, MUX, bascules D/JK)',
+            'Machines à états (FSM) : éditeur graphique + génération de timing diagrams',
+            'Conversion expression booléenne ↔ K-map ↔ schéma logique',
+            'Compteurs, registres à décalage, additionneurs en mode pas-à-pas',
+            'Quiz : trouver l’expression minimale d’une K-map donnée'
+        ]);
+    </script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEII Visual Toolbox</title>
+
+    <!-- Shared theme + UI primitives -->
+    <link rel="stylesheet" href="shared/css/theme.css">
+    <link rel="stylesheet" href="shared/css/toolbox.css">
+    <link rel="stylesheet" href="shared/css/home.css">
+    <script>
+        // Dev: bust CSS cache on every load. Production should use hashed paths.
+        document.querySelectorAll('link[rel="stylesheet"][href^="shared/"]').forEach(l => {
+            l.href = l.getAttribute('href') + '?v=' + Date.now();
+        });
+    </script>
+</head>
+<body>
+    <script type="module">
+        // Cache-bust module URL: dev_server.py already disables caching, but
+        // this protects against being run behind any other static host too.
+        import(`./shared/js/theme-switcher.js?v=${Date.now()}`);
+        const { mountHomeGalaxy } = await import(`./shared/js/home-galaxy.js?v=${Date.now()}`);
+        mountHomeGalaxy();
+    </script>
+</body>
+</html>

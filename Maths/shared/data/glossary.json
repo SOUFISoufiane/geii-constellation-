@@ -1,0 +1,38 @@
+{
+  "_meta": {
+    "version": 1,
+    "description": "Glossaire mathématique pour Signal Observatory — Tier 1 Phase 5 (D)",
+    "categories": ["symboles", "fonctions", "operateurs", "concepts", "conventions"]
+  },
+  "entries": [
+    { "id": "pi",       "cat": "symboles", "label": "π",    "latex": "\\pi",            "insert": "pi",        "desc": "Constante d'Archimède ≈ 3.14159. Apparaît partout en TF via les fréquences angulaires ω = 2πf." },
+    { "id": "j",        "cat": "symboles", "label": "j",    "latex": "j",               "insert": "j",         "desc": "Unité imaginaire (√−1). En GEII on note j (pas i) pour éviter la confusion avec un courant." },
+    { "id": "delta",    "cat": "symboles", "label": "δ(t)", "latex": "\\delta(t)",      "insert": "dirac(t)",  "desc": "Distribution de Dirac. Pic d'amplitude infinie en t=0, support nul, intégrale = 1." },
+    { "id": "infinity", "cat": "symboles", "label": "∞",    "latex": "\\infty",         "insert": "inf",       "desc": "Limite d'intégration ; en pratique substituée par les bornes du buffer." },
+    { "id": "omega",    "cat": "symboles", "label": "ω",    "latex": "\\omega",         "insert": "2*pi*f",    "desc": "Pulsation = 2πf en rad/s. La fréquence angulaire des physiciens." },
+    { "id": "tau",      "cat": "symboles", "label": "τ",    "latex": "\\tau",           "insert": "tau",       "desc": "Constante de temps ; ici, τ = 1/(2πf_c) pour le filtre actif." },
+
+    { "id": "sin",      "cat": "fonctions", "label": "sin", "latex": "\\sin(\\cdot)",   "insert": "sin(",      "desc": "Sinus. TF : S(f) = (1/2j)[δ(f−f₀) − δ(f+f₀)] pour sin(2πf₀t)." },
+    { "id": "cos",      "cat": "fonctions", "label": "cos", "latex": "\\cos(\\cdot)",   "insert": "cos(",      "desc": "Cosinus. TF : S(f) = (1/2)[δ(f−f₀) + δ(f+f₀)] pour cos(2πf₀t)." },
+    { "id": "exp",      "cat": "fonctions", "label": "exp", "latex": "\\exp(\\cdot)",   "insert": "exp(",      "desc": "Exponentielle. Vecteur propre de la dérivation : d/dt[e^(jωt)] = jω·e^(jωt). Coeur de la TF." },
+    { "id": "sinc",     "cat": "fonctions", "label": "sinc","latex": "\\mathrm{sinc}(\\cdot)", "insert": "sinc(", "desc": "Sinus cardinal : sin(πx)/(πx). TF d'une porte rectangulaire." },
+    { "id": "rect",     "cat": "fonctions", "label": "Π(t)","latex": "\\Pi(t)",         "insert": "rect(",     "desc": "Porte rectangulaire : 1 pour |t| < 1/2, sinon 0. TF = sinc(f)." },
+    { "id": "tri",      "cat": "fonctions", "label": "Λ(t)","latex": "\\Lambda(t)",     "insert": "tri(",      "desc": "Triangle : max(0, 1−|t|). TF = sinc²(f). Convolution de deux portes." },
+    { "id": "step",     "cat": "fonctions", "label": "u(t)","latex": "u(t)",            "insert": "u(",        "desc": "Échelon de Heaviside : 0 si t<0, 1 si t≥0. TF = (1/2)δ(f) + 1/(j2πf)." },
+
+    { "id": "ft",       "cat": "operateurs", "label": "𝓕",   "latex": "\\mathcal{F}\\{\\cdot\\}", "insert": "", "desc": "Transformée de Fourier : S(f) = ∫s(t)e^(−j2πft)dt. Décompose un signal en fréquences." },
+    { "id": "ift",      "cat": "operateurs", "label": "𝓕⁻¹", "latex": "\\mathcal{F}^{-1}\\{\\cdot\\}", "insert": "", "desc": "TF inverse : s(t) = ∫S(f)e^(+j2πft)df. Reconstruit le signal depuis son spectre." },
+    { "id": "conv",     "cat": "operateurs", "label": "∗",    "latex": "\\ast",                    "insert": "*", "desc": "Convolution : (s∗h)(t) = ∫s(τ)h(t−τ)dτ. La sortie d'un système linéaire." },
+    { "id": "corr",     "cat": "operateurs", "label": "⋆",    "latex": "\\star",                   "insert": "",  "desc": "Corrélation : (s⋆h)(τ) = ∫s(t)h(t+τ)dt. Mesure de similitude entre signaux." },
+
+    { "id": "parseval", "cat": "concepts", "label": "Parseval",   "latex": "\\int|s(t)|^2dt = \\int|S(f)|^2df", "insert": "", "desc": "Conservation de l'énergie entre temps et fréquence. Une TF préserve la norme L²." },
+    { "id": "nyquist",  "cat": "concepts", "label": "Nyquist",    "latex": "f_s > 2 f_{\\max}",      "insert": "", "desc": "Théorème d'échantillonnage : pour reconstruire un signal de fréquence max f_max, il faut fₛ > 2·f_max." },
+    { "id": "alias",    "cat": "concepts", "label": "Aliasing",   "latex": "f \\equiv f \\pmod{f_s}", "insert": "", "desc": "Repliement spectral : sous-échantillonner replie les hautes fréquences dans la bande [−fₛ/2, +fₛ/2]." },
+    { "id": "leakage",  "cat": "concepts", "label": "Leakage",    "latex": "",                       "insert": "", "desc": "Fuites spectrales : une troncature temporelle (rectangle) convoluant en fréquence par sinc → étalement des raies." },
+    { "id": "convth",   "cat": "concepts", "label": "Convolution Theorem", "latex": "\\mathcal{F}\\{s\\ast h\\} = S(f)\\cdot H(f)", "insert": "", "desc": "Convolution dans le temps ⇔ multiplication en fréquence. Démontrable visuellement via le mode ⑩ Algèbre." },
+
+    { "id": "conv_2pi", "cat": "conventions", "label": "Convention en 2πf", "latex": "S(f) = \\int s(t) e^{-j2\\pi f t}\\,dt", "insert": "", "desc": "Convention 'fréquence' (Hz). Symétrique, pas de facteur en TF inverse. Par défaut en GEII." },
+    { "id": "conv_om",  "cat": "conventions", "label": "Convention en ω",   "latex": "S(\\omega) = \\int s(t) e^{-j\\omega t}\\,dt", "insert": "", "desc": "Convention 'angulaire' (rad/s). TF inverse a un 1/(2π) devant." },
+    { "id": "conv_sym", "cat": "conventions", "label": "Convention symétrique", "latex": "S(\\omega) = \\tfrac{1}{\\sqrt{2\\pi}}\\int s(t) e^{-j\\omega t}\\,dt", "insert": "", "desc": "Convention 'physique' : facteur 1/√(2π) des deux côtés. Symétrique, utilisée en mécanique quantique." }
+  ]
+}

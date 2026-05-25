@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find \"C:\\\\Users\\\\ssouf\\\\Documents\\\\Projects\\\\IUT\\\\STUDY\" -maxdepth 2 -name \"*gemini*\" -o -name \"*GEMINI*\" 2>/dev/null)"
+    ]
+  }
+}

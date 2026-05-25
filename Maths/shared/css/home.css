@@ -1,0 +1,400 @@
+/* ═══════════════════════════════════════════════════════════════════
+ *  GEII TOOLBOX — HOME PAGE (cosmic galaxy)
+ *  Builds on theme.css and toolbox.css
+ * ═══════════════════════════════════════════════════════════════════ */
+
+html, body {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    margin: 0;
+}
+
+body.toolbox-home {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ─── HOME HEADER ─────────────────────────────────────────────────── */
+.home-header {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--rim);
+    background: linear-gradient(180deg,
+        rgba(8, 8, 28, 0.6) 0%,
+        rgba(5, 5, 20, 0.0) 100%);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    flex-shrink: 0;
+}
+
+.home-logo {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+.home-logo .title {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-glow);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-shadow: 0 0 12px rgba(79, 140, 255, 0.35);
+}
+.home-logo .sub {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--text-mid);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin-top: 1px;
+}
+
+.home-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.home-search {
+    background: rgba(13, 13, 40, 0.6);
+    border: 1px solid var(--rim);
+    border-radius: 999px;
+    padding: 6px 14px;
+    color: var(--text-bright);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.88rem;
+    width: 240px;
+    transition: border-color 120ms, background 120ms;
+}
+.home-search:focus {
+    outline: none;
+    border-color: var(--accent-cyan);
+    background: rgba(13, 13, 40, 0.9);
+}
+.home-search::placeholder { color: var(--text-dim); }
+
+.home-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px solid var(--rim);
+    border-radius: 999px;
+    color: var(--text-mid);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.80rem;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    user-select: none;
+    transition: all 120ms;
+}
+.home-toggle.active {
+    border-color: var(--accent-cyan);
+    color: var(--accent-cyan);
+}
+.home-toggle:hover {
+    border-color: var(--accent-blue);
+    color: var(--text-bright);
+}
+
+.home-theme-btn {
+    background: transparent;
+    border: 1px solid var(--rim);
+    border-radius: 999px;
+    padding: 6px 14px;
+    color: var(--text-bright);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.82rem;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 120ms;
+}
+.home-theme-btn:hover { border-color: var(--accent-cyan); }
+
+/* ─── HERO ────────────────────────────────────────────────────────── */
+.home-hero {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 28px 20px 14px;
+    flex-shrink: 0;
+}
+.home-hero h1 {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--text-glow);
+    letter-spacing: 0.02em;
+    text-shadow: 0 0 30px rgba(79, 140, 255, 0.3);
+}
+.home-hero p {
+    margin: 6px 0 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--text-mid);
+    letter-spacing: 0.08em;
+}
+.home-hero .counters {
+    display: inline-flex;
+    gap: 30px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--text-mid);
+    letter-spacing: 0.1em;
+}
+.home-hero .counter .num {
+    color: var(--accent-cyan);
+    font-size: 1.3rem;
+    font-weight: 700;
+    display: block;
+    line-height: 1;
+}
+.home-hero .counter .lbl {
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    letter-spacing: 0.18em;
+}
+
+/* ─── MATIÈRE FILTER CHIPS ────────────────────────────────────────── */
+.matiere-filters {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    padding: 6px 24px 12px;
+    flex-shrink: 0;
+}
+.matiere-chip {
+    padding: 3px 10px;
+    border: 1px solid var(--rim);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-mid);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    transition: all 120ms;
+}
+.matiere-chip:hover { color: var(--text-bright); border-color: var(--accent-blue); }
+.matiere-chip.active {
+    border-color: var(--accent-cyan);
+    color: var(--accent-cyan);
+    background: rgba(0, 245, 212, 0.08);
+}
+
+/* ─── GALAXY CANVAS ───────────────────────────────────────────────── */
+.galaxy {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    overflow: hidden;
+    z-index: 5;
+}
+
+.constellation {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+    animation: const-float 8s ease-in-out infinite;
+}
+@keyframes const-float {
+    0%, 100% { transform: translate(-50%, -50%) translateY(0px); }
+    50%      { transform: translate(-50%, -50%) translateY(-6px); }
+}
+
+.constellation-name {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--text-mid);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    pointer-events: auto;
+    cursor: default;
+    transition: color 200ms, text-shadow 200ms;
+}
+.constellation.hover .constellation-name {
+    color: var(--text-glow);
+}
+
+.constellation-stars {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    pointer-events: auto;
+}
+
+.star {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 96px;
+    padding: 14px 8px;
+    background: rgba(8, 8, 28, 0.6);
+    border: 1px solid var(--rim);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: transform 180ms, border-color 180ms, background 180ms,
+                box-shadow 180ms;
+    text-decoration: none;
+    color: inherit;
+    backdrop-filter: blur(2px);
+}
+.star::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 14px;
+    background: radial-gradient(circle, var(--star-glow, var(--accent-blue)) 0%, transparent 70%);
+    opacity: 0;
+    transition: opacity 200ms;
+    pointer-events: none;
+    z-index: -1;
+    filter: blur(8px);
+}
+.star:hover {
+    transform: translateY(-3px) scale(1.04);
+    border-color: var(--star-glow, var(--accent-blue));
+    background: rgba(13, 13, 40, 0.85);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+}
+.star:hover::before { opacity: 0.6; }
+
+.star-icon {
+    font-size: 1.6rem;
+    line-height: 1;
+    margin-bottom: 6px;
+    filter: drop-shadow(0 0 8px var(--star-glow, var(--accent-blue)));
+}
+.star-name {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--text-glow);
+    text-align: center;
+    letter-spacing: 0.04em;
+    line-height: 1.15;
+}
+.star-status {
+    margin-top: 5px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.62rem;
+    color: var(--star-glow, var(--accent-blue));
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+/* Pulsing for stable apps */
+.star.status-stable .star-icon { animation: star-pulse 3.5s ease-in-out infinite; }
+@keyframes star-pulse {
+    0%, 100% { filter: drop-shadow(0 0 8px var(--star-glow, var(--accent-blue))); }
+    50%      { filter: drop-shadow(0 0 16px var(--star-glow, var(--accent-blue))); }
+}
+
+/* Stubs are dim */
+.star.status-stub {
+    opacity: 0.55;
+    filter: saturate(0.6);
+}
+.star.status-stub .star-name::after {
+    content: ' 🚧';
+    font-size: 0.7em;
+}
+
+/* Filtered-out stars */
+.star.hidden {
+    opacity: 0.15;
+    pointer-events: none;
+    filter: grayscale(0.8) blur(0.5px);
+    transform: scale(0.92);
+}
+
+/* ─── POPOVER ─────────────────────────────────────────────────────── */
+.star-popover {
+    position: absolute;
+    z-index: 50;
+    width: 280px;
+    background: rgba(5, 5, 20, 0.95);
+    border: 1px solid var(--rim-bright);
+    border-radius: 10px;
+    padding: 14px 16px;
+    color: var(--text-bright);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.55);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 180ms, transform 180ms;
+}
+.star-popover.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+.star-popover h3 {
+    margin: 0 0 4px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    color: var(--text-glow);
+}
+.star-popover .pop-tagline {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.80rem;
+    color: var(--accent-cyan);
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+}
+.star-popover .pop-desc {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--text-bright);
+    margin-bottom: 10px;
+}
+.star-popover .pop-matieres {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 4px;
+}
+.star-popover .pop-matiere {
+    padding: 2px 7px;
+    background: var(--rim);
+    border-radius: 4px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text-mid);
+    letter-spacing: 0.04em;
+}
+
+/* ─── FOOTER ──────────────────────────────────────────────────────── */
+.home-footer {
+    position: relative;
+    z-index: 10;
+    text-align: center;
+    padding: 8px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    letter-spacing: 0.12em;
+    border-top: 1px solid var(--rim);
+    flex-shrink: 0;
+}
+.home-footer .accent { color: var(--accent-cyan); }
