@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Circuits Interactifs — GEII Toolbox</title>
-
+    <title>Circuits Interactifs — GEII Visual Toolbox</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <link rel="stylesheet" href="../../shared/css/theme.css">
     <link rel="stylesheet" href="../../shared/css/toolbox.css">
-    <script>
-        document.querySelectorAll('link[rel="stylesheet"]').forEach(l => {
-            const h = l.getAttribute('href');
-            if (h && !h.startsWith('http')) l.href = h + '?v=' + Date.now();
-        });
-    </script>
     <style>
-        body { display: flex; flex-direction: column; padding-top: var(--app-header-h, 36px); }
+        body { padding-top: 50px; display: flex; flex-direction: column; overflow: hidden; }
         .hud-scanlines, .vignette { position: fixed; inset: 0; pointer-events: none; }
+        .dashboard { display: flex; flex: 1; min-height: 0; padding: 1rem; gap: 1rem; position: relative; z-index: 10; }
+        .controls { width: 300px; background: rgba(0,0,0,0.5); border: 1px solid var(--rim); padding: 1rem; border-radius: 8px; display: flex; flex-direction: column; gap: 1rem; }
+        .plot-container { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid var(--rim); border-radius: 8px; overflow: hidden; }
+        .control-group { display: flex; flex-direction: column; gap: 4px; }
+        .control-group label { color: var(--text-mid); font-size: 0.8rem; font-family: 'Space Mono', monospace; }
+        .control-group input[type="range"] { accent-color: var(--accent-red); }
+        .control-group span { color: var(--accent-red); font-weight: bold; }
     </style>
 </head>
 <body>
@@ -23,19 +24,42 @@
     <div class="vignette"></div>
 
     <script type="module">
-        const v = Date.now();
-        const { mountAppHeader } = await import(`../../shared/js/app-header.js?v=${v}`);
-        const { renderStub } = await import(`../../shared/js/stub-render.js?v=${v}`);
+        const { mountAppHeader } = await import(`../../shared/js/app-header.js?v=${Date.now()}`);
         mountAppHeader('circuits');
-        renderStub('circuits', [
-            'Schémas interactifs en SVG (résistances, condensateurs, inductances, sources)',
-            'Calcul live de tensions/courants par les lois de Kirchhoff',
-            'Visualisation des théorèmes de Thévenin / Norton avec étapes',
-            'Réponse temporelle d’un RLC (sliders L, C, R) → tracé voltage(t)',
-            'Modes guidés : DC stationnaire · AC sinusoïdal · transitoire',
-            'Quiz auto-générés : trouver tension / courant manquant',
-            'Export du schéma + équations en PDF / PNG pour TP'
-        ]);
     </script>
+
+    <div class="dashboard">
+        <div class="controls">
+            <h2 style="margin: 0; color: var(--accent-red); font-size: 1.2rem;">⚡ RLC Réponse Indicielle</h2>
+            <p style="color: var(--text-dim); font-size: 0.8rem;">Réponse d'un circuit RLC série à un échelon de tension E = 10V.</p>
+            
+            <div class="control-group">
+                <label>Résistance R (Ω): <span id="val-r">10</span></label>
+                <input type="range" id="slider-r" min="0" max="100" step="1" value="10">
+            </div>
+            
+            <div class="control-group">
+                <label>Inductance L (mH): <span id="val-l" style="color:var(--accent-blue)">100</span></label>
+                <input type="range" id="slider-l" min="1" max="1000" step="10" value="100">
+            </div>
+            
+            <div class="control-group">
+                <label>Capacité C (µF): <span id="val-c" style="color:var(--accent-green)">10</span></label>
+                <input type="range" id="slider-c" min="1" max="100" step="1" value="10">
+            </div>
+
+            <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--rim); font-family: 'Space Mono', monospace; font-size: 0.8rem; color: var(--text-bright);">
+                <div>ω₀ = <span id="calc-w0">--</span> rad/s</div>
+                <div>ζ = <span id="calc-zeta">--</span></div>
+                <div id="calc-regime" style="color: var(--accent-gold); margin-top: 4px;">--</div>
+            </div>
+        </div>
+
+        <div class="plot-container">
+            <div id="plot" style="width: 100%; height: 100%;"></div>
+        </div>
+    </div>
+
+    <script type="module" src="./js/main.js"></script>
 </body>
 </html>

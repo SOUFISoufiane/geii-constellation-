@@ -3,19 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Lab — GEII Toolbox</title>
-
+    <title>Digital Lab — GEII Visual Toolbox</title>
     <link rel="stylesheet" href="../../shared/css/theme.css">
     <link rel="stylesheet" href="../../shared/css/toolbox.css">
-    <script>
-        document.querySelectorAll('link[rel="stylesheet"]').forEach(l => {
-            const h = l.getAttribute('href');
-            if (h && !h.startsWith('http')) l.href = h + '?v=' + Date.now();
-        });
-    </script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <style>
-        body { display: flex; flex-direction: column; padding-top: var(--app-header-h, 36px); }
+        body { padding-top: 50px; display: flex; flex-direction: column; overflow: auto; }
         .hud-scanlines, .vignette { position: fixed; inset: 0; pointer-events: none; }
+        .dashboard { padding: 2rem; position: relative; z-index: 10; max-width: 800px; margin: 0 auto; width: 100%; }
+        h1 { color: var(--accent-green); }
+        .truth-table { width: 100%; border-collapse: collapse; margin-top: 1rem; background: rgba(0,0,0,0.4); border: 1px solid var(--rim); }
+        .truth-table th, .truth-table td { padding: 8px; border: 1px solid var(--rim); text-align: center; font-family: 'Space Mono', monospace; }
+        .truth-table th { background: rgba(255,255,255,0.05); color: var(--text-mid); }
+        .out-btn { background: transparent; border: 1px solid var(--accent-green); color: var(--accent-green); padding: 4px 16px; cursor: pointer; border-radius: 4px; font-family: 'Space Mono', monospace; font-weight: bold; width: 60px; }
+        .out-btn.on { background: rgba(6, 255, 165, 0.2); }
+        .equation-box { margin-top: 2rem; padding: 1rem; border: 1px solid var(--accent-purple); border-radius: 8px; background: rgba(0,0,0,0.5); }
+        select { background: transparent; border: 1px solid var(--rim); color: var(--text-bright); padding: 4px; border-radius: 4px; font-family: 'Space Mono', monospace; }
     </style>
 </head>
 <body>
@@ -23,19 +27,32 @@
     <div class="vignette"></div>
 
     <script type="module">
-        const v = Date.now();
-        const { mountAppHeader } = await import(`../../shared/js/app-header.js?v=${v}`);
-        const { renderStub } = await import(`../../shared/js/stub-render.js?v=${v}`);
+        const { mountAppHeader } = await import(`../../shared/js/app-header.js?v=${Date.now()}`);
         mountAppHeader('numerique');
-        renderStub('numerique', [
-            'Éditeur visuel de tables de vérité (jusqu’à 6 variables)',
-            'Diagrammes de Karnaugh : groupements automatiques + simplification',
-            'Simulateur de circuits logiques (NAND, NOR, MUX, bascules D/JK)',
-            'Machines à états (FSM) : éditeur graphique + génération de timing diagrams',
-            'Conversion expression booléenne ↔ K-map ↔ schéma logique',
-            'Compteurs, registres à décalage, additionneurs en mode pas-à-pas',
-            'Quiz : trouver l’expression minimale d’une K-map donnée'
-        ]);
     </script>
+
+    <div class="dashboard">
+        <h1>01 Digital Lab</h1>
+        <p style="color:var(--text-dim)">Éditeur de Table de Vérité interactif. Cliquez sur les sorties (S) pour basculer leur état (0/1).</p>
+        
+        <label style="color:var(--text-mid); margin-right:8px;">Nombre d'entrées :</label>
+        <select id="var-count">
+            <option value="2">2 (A, B)</option>
+            <option value="3" selected>3 (A, B, C)</option>
+            <option value="4">4 (A, B, C, D)</option>
+        </select>
+
+        <table class="truth-table" id="tt">
+            <thead id="tt-head"></thead>
+            <tbody id="tt-body"></tbody>
+        </table>
+
+        <div class="equation-box">
+            <h3 style="margin-top:0; color:var(--accent-purple);">Équation Canonique (Somme des Produits)</h3>
+            <div id="equation-out" style="font-size: 1.2rem; text-align: center; margin-top: 1rem; color: var(--text-bright);"></div>
+        </div>
+    </div>
+
+    <script type="module" src="./js/main.js"></script>
 </body>
 </html>

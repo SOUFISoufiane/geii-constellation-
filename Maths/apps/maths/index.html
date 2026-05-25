@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Math Visualizer — GEII Toolbox</title>
-
+    <title>Math Visualizer — GEII Visual Toolbox</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
     <link rel="stylesheet" href="../../shared/css/theme.css">
     <link rel="stylesheet" href="../../shared/css/toolbox.css">
-    <script>
-        document.querySelectorAll('link[rel="stylesheet"]').forEach(l => {
-            const h = l.getAttribute('href');
-            if (h && !h.startsWith('http')) l.href = h + '?v=' + Date.now();
-        });
-    </script>
     <style>
-        body { display: flex; flex-direction: column; padding-top: var(--app-header-h, 36px); }
+        body { padding-top: 50px; display: flex; flex-direction: column; overflow: hidden; }
         .hud-scanlines, .vignette { position: fixed; inset: 0; pointer-events: none; }
+        .dashboard { display: flex; flex: 1; min-height: 0; padding: 1rem; gap: 1rem; position: relative; z-index: 10; }
+        .controls { width: 320px; background: rgba(0,0,0,0.5); border: 1px solid var(--rim); padding: 1rem; border-radius: 8px; display: flex; flex-direction: column; gap: 1rem; }
+        .plot-container { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid var(--rim); border-radius: 8px; overflow: hidden; }
+        .control-group { display: flex; flex-direction: column; gap: 4px; }
+        .control-group label { color: var(--text-mid); font-size: 0.8rem; font-family: 'Space Mono', monospace; }
+        .control-group input[type="text"] { background: transparent; border: 1px solid var(--accent-purple); color: var(--text-bright); padding: 6px; font-family: 'Space Mono', monospace; border-radius: 4px; }
+        .btn-plot { background: rgba(155, 93, 229, 0.2); border: 1px solid var(--accent-purple); color: var(--accent-purple); padding: 8px; cursor: pointer; border-radius: 4px; font-family: 'Space Mono', monospace; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -23,19 +24,35 @@
     <div class="vignette"></div>
 
     <script type="module">
-        const v = Date.now();
-        const { mountAppHeader } = await import(`../../shared/js/app-header.js?v=${v}`);
-        const { renderStub } = await import(`../../shared/js/stub-render.js?v=${v}`);
+        const { mountAppHeader } = await import(`../../shared/js/app-header.js?v=${Date.now()}`);
         mountAppHeader('maths');
-        renderStub('maths', [
-            'Résolveur visuel d’équations différentielles (1er et 2nd ordre)',
-            'Transformée de Laplace pas-à-pas : tableau usuel + table interactive',
-            'Champs de vecteurs + portraits de phase pour systèmes 2D',
-            'Espaces vectoriels : visualisation 2D/3D de bases, projections, changements',
-            'Suites & séries : tests de convergence avec rayon animé',
-            'Nombres complexes : plan d’Argand interactif, exponentielle complexe',
-            'Algèbre linéaire : déterminant comme aire, valeurs propres comme directions'
-        ]);
     </script>
+
+    <div class="dashboard">
+        <div class="controls">
+            <h2 style="margin: 0; color: var(--accent-purple); font-size: 1.2rem;">∫ Math Visualizer</h2>
+            <p style="color: var(--text-dim); font-size: 0.8rem;">Visualisation de surfaces 3D. Entrez une fonction z = f(x,y).</p>
+            
+            <div class="control-group">
+                <label>Fonction f(x,y) :</label>
+                <input type="text" id="func-input" value="Math.sin(x) * Math.cos(y)">
+            </div>
+            
+            <div class="control-group">
+                <label>Plage (x, y) de -N à N :</label>
+                <input type="number" id="range-input" value="5" min="1" max="20" style="background: transparent; border: 1px solid var(--rim); color: var(--text-bright); padding: 6px; border-radius: 4px;">
+            </div>
+
+            <button class="btn-plot" id="btn-plot">TRACER LA SURFACE</button>
+
+            <div id="error-msg" style="color: var(--accent-red); font-size: 0.8rem; margin-top: 1rem;"></div>
+        </div>
+
+        <div class="plot-container">
+            <div id="plot" style="width: 100%; height: 100%;"></div>
+        </div>
+    </div>
+
+    <script type="module" src="./js/main.js"></script>
 </body>
 </html>

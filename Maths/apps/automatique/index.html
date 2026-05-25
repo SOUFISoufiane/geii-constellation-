@@ -3,19 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Servo Lab — GEII Toolbox</title>
-
+    <title>Servo Lab — GEII Visual Toolbox</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <!-- We need numeric.js or similar for complex roots if we wanted full root locus, but we'll do time-domain PID manually -->
     <link rel="stylesheet" href="../../shared/css/theme.css">
     <link rel="stylesheet" href="../../shared/css/toolbox.css">
-    <script>
-        document.querySelectorAll('link[rel="stylesheet"]').forEach(l => {
-            const h = l.getAttribute('href');
-            if (h && !h.startsWith('http')) l.href = h + '?v=' + Date.now();
-        });
-    </script>
     <style>
-        body { display: flex; flex-direction: column; padding-top: var(--app-header-h, 36px); }
+        body { padding-top: 50px; display: flex; flex-direction: column; overflow: hidden; }
         .hud-scanlines, .vignette { position: fixed; inset: 0; pointer-events: none; }
+        .dashboard { display: flex; flex: 1; min-height: 0; padding: 1rem; gap: 1rem; position: relative; z-index: 10; }
+        .controls { width: 320px; background: rgba(0,0,0,0.5); border: 1px solid var(--rim); padding: 1rem; border-radius: 8px; display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; }
+        .plot-container { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid var(--rim); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
+        .control-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;}
+        .control-group label { color: var(--text-mid); font-size: 0.8rem; font-family: 'Space Mono', monospace; }
+        .control-group input[type="range"] { accent-color: var(--accent-gold); }
+        .control-group span { color: var(--accent-gold); font-weight: bold; }
+        .section-title { margin: 0; color: var(--accent-gold); font-size: 1rem; border-bottom: 1px solid var(--rim); padding-bottom: 4px; }
     </style>
 </head>
 <body>
@@ -23,19 +26,49 @@
     <div class="vignette"></div>
 
     <script type="module">
-        const v = Date.now();
-        const { mountAppHeader } = await import(`../../shared/js/app-header.js?v=${v}`);
-        const { renderStub } = await import(`../../shared/js/stub-render.js?v=${v}`);
+        const { mountAppHeader } = await import(`../../shared/js/app-header.js?v=${Date.now()}`);
         mountAppHeader('automatique');
-        renderStub('automatique', [
-            'PID interactif sur plant 2nd ordre (sliders Kp, Ki, Kd) → réponse indicielle live',
-            'Lieu des racines (root locus) avec déplacement des pôles à la souris',
-            'Diagrammes de Bode / Nyquist du système bouclé',
-            'Calcul automatique des marges de gain & phase',
-            'Comparaison feedforward / feedback / cascade',
-            'Modes pédagogiques : pôle dominant · effet du dérivateur · saturation',
-            'Identification visuelle d’une fonction de transfert à partir d’une réponse'
-        ]);
     </script>
+
+    <div class="dashboard">
+        <div class="controls">
+            <h2 style="margin: 0; color: var(--accent-gold); font-size: 1.2rem;">⟲ Servo Lab (PID)</h2>
+            <p style="color: var(--text-dim); font-size: 0.8rem;">Contrôle PID d'un procédé du 2nd ordre : G(s) = K / (s² + 2ζω₀s + ω₀²)</p>
+            
+            <div class="section-title" style="color:var(--accent-blue)">Procédé (Plant)</div>
+            <div class="control-group">
+                <label>Gain K: <span id="val-k" style="color:var(--accent-blue)">1</span></label>
+                <input type="range" id="slider-k" min="0.1" max="10" step="0.1" value="1">
+            </div>
+            <div class="control-group">
+                <label>Pulsation ω₀: <span id="val-w0" style="color:var(--accent-blue)">1</span></label>
+                <input type="range" id="slider-w0" min="0.1" max="5" step="0.1" value="1">
+            </div>
+            <div class="control-group">
+                <label>Amortissement ζ: <span id="val-zeta" style="color:var(--accent-blue)">0.5</span></label>
+                <input type="range" id="slider-zeta" min="0.1" max="2" step="0.1" value="0.5">
+            </div>
+
+            <div class="section-title" style="color:var(--accent-red); margin-top: 1rem;">Contrôleur PID</div>
+            <div class="control-group">
+                <label>Proportionnel Kp: <span id="val-kp" style="color:var(--accent-red)">2</span></label>
+                <input type="range" id="slider-kp" min="0" max="20" step="0.5" value="2">
+            </div>
+            <div class="control-group">
+                <label>Intégral Ki: <span id="val-ki" style="color:var(--accent-red)">0.5</span></label>
+                <input type="range" id="slider-ki" min="0" max="10" step="0.1" value="0.5">
+            </div>
+            <div class="control-group">
+                <label>Dérivé Kd: <span id="val-kd" style="color:var(--accent-red)">0.5</span></label>
+                <input type="range" id="slider-kd" min="0" max="10" step="0.1" value="0.5">
+            </div>
+        </div>
+
+        <div class="plot-container">
+            <div id="plot" style="width: 100%; height: 100%;"></div>
+        </div>
+    </div>
+
+    <script type="module" src="./js/main.js"></script>
 </body>
 </html>
