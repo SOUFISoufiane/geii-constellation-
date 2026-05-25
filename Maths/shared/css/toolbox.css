@@ -61,6 +61,28 @@ body.theme-solarized #geii-app-header {
     border-color: var(--accent-blue);
     transform: translateX(-2px);
 }
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    #sidebar {
+        width: 100%;
+        max-width: 100%;
+        position: relative;
+        border-right: none;
+        border-bottom: 1px solid var(--rim);
+        height: auto;
+    }
+    body {
+        flex-direction: column;
+    }
+    .math-panel {
+        position: relative;
+        width: 100%;
+        max-width: 100%;
+        border-left: none;
+        border-top: 1px solid var(--rim);
+    }
+}
 #geii-app-header .gh-arrow {
     color: var(--accent-blue);
     font-size: 0.95rem;

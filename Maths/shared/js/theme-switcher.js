@@ -47,6 +47,17 @@ export const THEME_META = {
     solarized: { label: 'Solarized', icon: '☀',  desc: 'Scientific contrast' }
 };
 
+// Bind 'T' hotkey globally for toggling themes
+window.addEventListener('keydown', e => {
+    if (e.key.toLowerCase() === 't' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+        const next = cycleTheme();
+        const iconEl = document.getElementById('home-theme-icon');
+        const labelEl = document.getElementById('home-theme-label');
+        if (iconEl) iconEl.textContent = THEME_META[next].icon;
+        if (labelEl) labelEl.textContent = THEME_META[next].label;
+    }
+});
+
 // Auto-apply persisted theme on import — runs once per page.
 if (typeof document !== 'undefined') {
     const apply = () => setTheme(getTheme());

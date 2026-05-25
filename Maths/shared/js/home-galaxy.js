@@ -164,6 +164,14 @@ function wireEvents() {
         document.getElementById('home-theme-label').textContent = THEME_META[next].label;
     });
 
+    // Hotkey: '/' to focus search
+    window.addEventListener('keydown', e => {
+        if (e.key === '/' && document.activeElement !== search) {
+            e.preventDefault();
+            search.focus();
+        }
+    });
+
     // Star hover → popover
     const popover = document.getElementById('star-popover');
     document.getElementById('galaxy').addEventListener('mouseover', e => {

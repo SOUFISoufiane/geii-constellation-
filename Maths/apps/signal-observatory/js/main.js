@@ -353,4 +353,25 @@ function whenReady(fn) {
     }
 }
 
+// Hotkeys: Up/Down to cycle signals
+window.addEventListener('keydown', e => {
+    if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        const sel1 = document.getElementById('sel-s1');
+        if (!sel1) return;
+        e.preventDefault();
+        const opts = Array.from(sel1.options);
+        let idx = sel1.selectedIndex;
+        if (e.key === 'ArrowDown') idx = (idx + 1) % opts.length;
+        if (e.key === 'ArrowUp') idx = (idx - 1 + opts.length) % opts.length;
+        sel1.selectedIndex = idx;
+        const sigId = opts[idx].value;
+        state.funcId = sigId;
+        setActiveTab(sigId);
+        renderExtraControls(state, () => { notify(); });
+        resetAlgebraCache();
+        notify();
+    }
+});
+
 whenReady(boot);
