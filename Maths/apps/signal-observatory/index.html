@@ -192,6 +192,12 @@
                 <span>🎥 REC</span>
             </div>
 
+            <!-- Tier 2 Phase 1: CSV Export -->
+            <div class="player-toggle-chip" id="export-csv-toggle" title="Exporter les données du signal en CSV">
+                <div class="dot" style="background:var(--accent-cyan)"></div>
+                <span>💾 CSV</span>
+            </div>
+
             <div class="uplink-indicator" title="Telemetry uplink active">
                 <div class="uplink-bar"></div>
                 <div class="uplink-bar"></div>
@@ -275,6 +281,13 @@
                         <label class="toggle-row">
                             <input type="checkbox" id="params-envelope">
                             <span>Enveloppe Spectrale</span>
+                        </label>
+                    </div>
+                    <!-- Tier 2 Phase 2: Harmonics -->
+                    <div class="params-row">
+                        <label class="toggle-row">
+                            <input type="checkbox" id="params-harmonics">
+                            <span>Harmoniques (Multiples rot.)</span>
                         </label>
                     </div>
                 </div>

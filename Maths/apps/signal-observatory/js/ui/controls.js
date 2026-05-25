@@ -167,6 +167,15 @@ export function initControls(state, onChange) {
         });
     }
 
+    // Harmonics toggle
+    const harmChk = document.getElementById('params-harmonics');
+    if (harmChk) {
+        harmChk.addEventListener('change', e => {
+            state.showHarmonics = e.target.checked;
+            updateThrottled();
+        });
+    }
+
     // Sampling frequency slider (fₛ for Shannon)
     const fsSlider = document.getElementById('fs-slider');
     const fsVal    = document.getElementById('fs-val');

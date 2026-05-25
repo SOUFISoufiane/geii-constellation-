@@ -54,6 +54,25 @@ export function renderRawMag(signal, magData, domain, state) {
         }
     }
 
+    if (state && state.showHarmonics && state.windingFreq) {
+        const maxMag = Math.max(...magData);
+        const f0 = Math.abs(state.windingFreq);
+        if (f0 > 0.05) {
+            const hx = [];
+            const hy = [];
+            for (let k = 1; k * f0 <= 20; k++) {
+                const f = k * f0;
+                hx.push(f, f, null, -f, -f, null);
+                hy.push(0, maxMag, null, 0, maxMag, null);
+            }
+            traces.push({
+                x: hx, y: hy, type: 'scatter', mode: 'lines',
+                line: { color: PALETTE.purple, width: 1, dash: 'dot' },
+                name: 'Harmoniques', hoverinfo: 'none'
+            });
+        }
+    }
+
     Plotly.react('plot-raw-mag', traces, layout, PLOTLY_CONFIG);
 }
 

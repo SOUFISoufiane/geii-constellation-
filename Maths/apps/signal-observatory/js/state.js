@@ -10,6 +10,7 @@ export const state = {
     injectNoise: false,
     showPeaks:   false, // Phase 1: Peak Detection feature
     showEnvelope: false, // Phase 2: Spectral Envelope feature
+    showHarmonics: false, // Tier 2 Phase 2: Harmonics Explorer
     activeCombo: 'parseval',
     filterType:  'butterworth',  // Active filter type
     applyFilterEverywhere: true, // Apply filter response in every mode

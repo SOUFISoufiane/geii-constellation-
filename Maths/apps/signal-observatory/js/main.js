@@ -11,6 +11,7 @@ import { readStateFromUrl, updateUrlSilently } from '../../../shared/js/state-se
 import { mountAppHeader } from '../../../shared/js/app-header.js';
 import { mountGlossary } from '../../../shared/js/glossary.js';
 import { startRecording, stopRecording, isRecording } from '../../../shared/js/recorder.js';
+import { exportToCsv } from './csv-exporter.js';
 import { algebraState, resetAlgebraCache } from './plots/algebra.js';
 import { renderRawTime, renderRawMag, renderRawPhase, renderWinding } from './plots/raw-telemetry.js';
 import { renderFusion } from './plots/fusion-modes.js';
@@ -162,7 +163,7 @@ function addSamplesOverlay(signal) {
 // short + forward-compatible.
 const SHAREABLE_KEYS = [
     'funcId', 'windingFreq', 'cutoffFreq', 'filterOrder',
-    'injectNoise', 'showPeaks', 'showEnvelope',
+    'injectNoise', 'showPeaks', 'showEnvelope', 'showHarmonics',
     'activeCombo', 'filterType', 'applyFilterEverywhere', 'params',
     'theme', 'bloomIntensity', 'scanlineOpacity',
     'fftWindow', 'noiseType', 'unwrapPhase',
@@ -314,6 +315,16 @@ function boot() {
                     if (labelEl) labelEl.textContent = defaultLabel;
                     console.log('[recorder] WebM ready,', blob?.size, 'bytes — download triggered');
                 }
+            });
+        }
+
+        // Tier 2 Phase 1: CSV export toggle
+        const exportCsvToggle = document.getElementById('export-csv-toggle');
+        if (exportCsvToggle) {
+            exportCsvToggle.addEventListener('click', () => {
+                const signal = findSignal(state.funcId);
+                const name = signal ? signal.name : 'signal';
+                exportToCsv(name, lastComputed);
             });
         }
 
