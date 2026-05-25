@@ -23,10 +23,11 @@ export const algebraState = {
 };
 
 export const OPS = {
-    sum:         { label: '➕  Somme  s₁ + s₂',                    symbol: '+'  },
-    product:     { label: '✖  Produit  s₁ · s₂ (modulation AM)',  symbol: '·'  },
-    convolution: { label: '⊛  Convolution  (s₁ ∗ s₂)(t)',          symbol: '∗'  },
-    freq_mult:   { label: '𝓕  Produit fréquentiel  𝓕⁻¹{S₁·S₂}',   symbol: '𝓕·' }
+    sum:               { label: '➕  Somme  s₁ + s₂',                    symbol: '+'  },
+    product:           { label: '✖  Produit  s₁ · s₂ (modulation AM)',  symbol: '·'  },
+    convolution:       { label: '⊛  Convolution  (s₁ ∗ s₂)(t)',          symbol: '∗'  },
+    cross_correlation: { label: '⋆  Corrélation croisée  (s₁ ⋆ s₂)(τ)', symbol: '⋆'  },
+    freq_mult:         { label: '𝓕  Produit fréquentiel  𝓕⁻¹{S₁·S₂}',   symbol: '𝓕·' }
 };
 
 // Eligible second signals — finite-support / well-behaved, matches the
@@ -76,6 +77,22 @@ function freqMult(a, b) {
     return convolve(a, b);  // same numerics; relabelled for didactic clarity
 }
 
+/** Discrete cross-correlation */
+function crossCorrelate(a, b) {
+    const out = new Float64Array(aN);
+    for (let i = 0; i < aN; i++) {
+        let s = 0;
+        for (let k = 0; k < aN; k++) {
+            const t = aT[k];
+            const t_plus_tau = t + aT[i];
+            const j = Math.round((t_plus_tau - aT[0]) / aDT);
+            if (j >= 0 && j < aN) s += a[k] * b[j];
+        }
+        out[i] = s * aDT;
+    }
+    return Array.from(out);
+}
+
 /** Sample a signal on the algebra grid using its calcTime. */
 function sampleTime(signal) {
     if (!signal) return new Array(aN).fill(0);
@@ -101,11 +118,12 @@ function computeAll(sigA, sigB, op) {
     let rT_s;
 
     switch (op) {
-        case 'sum':         rT_s = aT_s.map((v, i) => v + bT_s[i]); break;
-        case 'product':     rT_s = aT_s.map((v, i) => v * bT_s[i]); break;
-        case 'convolution': rT_s = convolve(aT_s, bT_s); break;
-        case 'freq_mult':   rT_s = freqMult(aT_s, bT_s); break;
-        default:            rT_s = aT_s.slice();
+        case 'sum':               rT_s = aT_s.map((v, i) => v + bT_s[i]); break;
+        case 'product':           rT_s = aT_s.map((v, i) => v * bT_s[i]); break;
+        case 'convolution':       rT_s = convolve(aT_s, bT_s); break;
+        case 'cross_correlation': rT_s = crossCorrelate(aT_s, bT_s); break;
+        case 'freq_mult':         rT_s = freqMult(aT_s, bT_s); break;
+        default:                  rT_s = aT_s.slice();
     }
 
     // Spectra of s1, s2 from analytic calcFreq (clean), result from numeric.
@@ -115,10 +133,11 @@ function computeAll(sigA, sigB, op) {
     const aMag = sampleMag(sigA);
     const bMag = sampleMag(sigB);
     let rMag;
-    if (op === 'sum')         rMag = aMag.map((m, i) => m + bMag[i]);
-    else if (op === 'product')     rMag = convolveSpectra(aMag, bMag);     // mult in time = conv in freq
-    else if (op === 'convolution') rMag = aMag.map((m, i) => m * bMag[i]);
-    else /* freq_mult */           rMag = aMag.map((m, i) => m * bMag[i]);
+    if (op === 'sum')                   rMag = aMag.map((m, i) => m + bMag[i]);
+    else if (op === 'product')          rMag = convolveSpectra(aMag, bMag);     // mult in time = conv in freq
+    else if (op === 'convolution')      rMag = aMag.map((m, i) => m * bMag[i]);
+    else if (op === 'cross_correlation')rMag = aMag.map((m, i) => m * bMag[i]); // FT{s1*s2} = S1* S2 -> mag is product
+    else /* freq_mult */                rMag = aMag.map((m, i) => m * bMag[i]);
 
     cached = { aT_s, bT_s, rT_s, aMag, bMag, rMag };
     cacheKey = key;

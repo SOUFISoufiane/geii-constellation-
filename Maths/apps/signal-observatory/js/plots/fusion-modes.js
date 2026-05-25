@@ -26,6 +26,9 @@ export function renderFusion(mode, signal, state, computed) {
         case 'nyquist_pure': return renderNyquistPure(signal, state, computed);
         case 'waterfall':   return renderWaterfall(computed.timeData, state);
         case 'algebra':     return renderAlgebra(signal, state, computed);
+        case 'polezero':    return renderPoleZero(signal, state, computed);
+        case 'smith':       return renderSmith(signal, state, computed);
+        case 'phasors':     return renderPhasors(signal, state, computed);
         case 'game':        return renderGame(signal, state, computed);
         default:          return renderParseval(signal, state, computed);
     }
@@ -264,6 +267,115 @@ function renderFilter(signal, state, { magData }) {
 
 // ─── CONVOLUTION MODE ──────────────────────────────────────────────
 function renderConvMode(signal, state, computed) {
-    // Convolution rendering logic is in convolution.js
     renderConvolution();
+}
+
+// ─── POLE-ZERO MAP ─────────────────────────────────────────────────
+function renderPoleZero(signal, state, computed) {
+    const ftype = state.filterType || 'butterworth';
+    const fc = state.cutoffFreq || 1;
+    const n = state.filterOrder || 1;
+    const wc = 2*Math.PI*fc;
+    
+    const polesRe = [];
+    const polesIm = [];
+    
+    if (ftype === 'butterworth' || ftype === 'chebyshev1' || ftype === 'chebyshev2' || ftype === 'bessel' || ftype === 'iir') {
+        for (let k = 1; k <= n; k++) {
+            const theta = Math.PI * (2*k + n - 1) / (2*n);
+            polesRe.push(wc * Math.cos(theta));
+            polesIm.push(wc * Math.sin(theta));
+        }
+    } else if (ftype === 'rc' || ftype === 'fir') {
+        for (let k = 0; k < n; k++) {
+            polesRe.push(-wc);
+            polesIm.push(0);
+        }
+    } else if (ftype === 'rlc') {
+        const R = 1, L = 1/wc, C = 1/wc;
+        const alpha = R / (2*L);
+        const wd = Math.sqrt(Math.max(0, 1/(L*C) - alpha*alpha));
+        polesRe.push(-alpha, -alpha);
+        polesIm.push(wd, -wd);
+    }
+    
+    const circleRe = [], circleIm = [];
+    for(let i=0; i<=100; i++) {
+        const a = i/100 * 2*Math.PI;
+        circleRe.push(wc * Math.cos(a));
+        circleIm.push(wc * Math.sin(a));
+    }
+
+    const layout = baseLayout({
+        title: { text: `Carte Pôles-Zéros (${FILTER_TYPES[ftype]?.label || ftype})`, font: {color: PALETTE.gold} },
+        xaxis: { title: axisTitle('Re(s)'), gridcolor: PALETTE.bgGrid, zerolinecolor: PALETTE.bgZero, scaleanchor: 'y', scaleratio: 1 },
+        yaxis: { title: axisTitle('Im(s)'), gridcolor: PALETTE.bgGrid, zerolinecolor: PALETTE.bgZero }
+    });
+
+    const data = [
+        { x: circleRe, y: circleIm, type: 'scatter', mode: 'lines', line: {color: 'rgba(255,255,255,0.1)', dash: 'dot'}, hoverinfo: 'skip', name: 'Lieu |s| = ωc' },
+        { x: polesRe, y: polesIm, type: 'scatter', mode: 'markers', marker: {symbol: 'x', size: 12, color: PALETTE.red, line: {width:2}}, name: 'Pôles' },
+    ];
+    Plotly.react('plot-fusion', data, layout, PLOTLY_CONFIG);
+}
+
+// ─── SMITH CHART ───────────────────────────────────────────────────
+function renderSmith(signal, state, computed) {
+    const fNyq = linspace(0.1, 100, 200);
+    const ftype = state.filterType || 'butterworth';
+    const filtVals = Array.from(fNyq).map(f => getFilterResponse(ftype, f, state.cutoffFreq, state.filterOrder));
+    
+    const realH = filtVals.map(d => d.mag * Math.cos(d.phase));
+    const imagH = filtVals.map(d => d.mag * Math.sin(d.phase));
+
+    const layout = baseLayout({
+        title: { text: `Abaque de Smith - ${FILTER_TYPES[ftype]?.label || ftype}`, font: {color: PALETTE.gold} },
+        polar: { radialaxis: { visible: false }, angularaxis: { visible: false } },
+        smith: {
+            realaxis: { gridcolor: PALETTE.bgGrid, linecolor: PALETTE.bgZero },
+            imagaxis: { gridcolor: PALETTE.bgGrid, linecolor: PALETTE.bgZero }
+        }
+    });
+    
+    const data = [{
+        type: 'scattersmith',
+        real: realH,
+        imag: imagH,
+        mode: 'lines+markers',
+        marker: { color: PALETTE.purple, size: 4 },
+        line: { color: PALETTE.cyan, width: 2 }
+    }];
+    Plotly.react('plot-fusion', data, layout, PLOTLY_CONFIG);
+}
+
+// ─── PHASOR VECTOR DIAGRAMS ────────────────────────────────────────
+function renderPhasors(signal, state, computed) {
+    const tAxis = linspace(0, 4, 200);
+    const w = state.windingFreq || 1;
+    
+    const reCircle = [], imCircle = [];
+    for(let i=0; i<=100; i++) {
+        const a = i/100 * 2*Math.PI;
+        reCircle.push(Math.cos(a));
+        imCircle.push(Math.sin(a));
+    }
+    
+    const sigSine = Array.from(tAxis).map(t => Math.sin(2*Math.PI*w*t));
+
+    const layout = baseLayoutLegend({
+        margin: { t: 40, b: 40, l: 55, r: 55 },
+        xaxis:  { title: axisTitle('Re'), gridcolor: PALETTE.bgGrid, zerolinecolor: PALETTE.bgZero, domain: [0, 0.44], scaleanchor: 'y', scaleratio: 1 },
+        yaxis:  { title: axisTitle('Im'), gridcolor: PALETTE.bgGrid, zerolinecolor: PALETTE.bgZero },
+        xaxis2: { title: axisTitle('t (s)'), gridcolor: PALETTE.bgGrid, domain: [0.56, 1], anchor: 'y2' },
+        yaxis2: { title: axisTitle('Im Projection (sinus)'), gridcolor: PALETTE.bgGrid, anchor: 'x2' },
+    });
+
+    // Static display of the orbit and the sine wave. The playhead will animate it.
+    const data = [
+        { x: reCircle, y: imCircle, name: 'Cercle Unité', type: 'scatter', mode: 'lines', line: { color: 'rgba(255,255,255,0.2)', dash: 'dash' }, xaxis: 'x', yaxis: 'y' },
+        // Vector drawn at t=0
+        { x: [0, 1], y: [0, 0], name: 'Phasor', type: 'scatter', mode: 'lines+markers', marker: {size: 8}, line: { color: PALETTE.gold, width: 3 }, xaxis: 'x', yaxis: 'y' },
+        { x: tAxis, y: sigSine,  name: 'Projection', type: 'scatter', line: { color: PALETTE.cyan, width: 2 }, xaxis: 'x2', yaxis: 'y2' }
+    ];
+    Plotly.react('plot-fusion', data, layout, PLOTLY_CONFIG);
 }
