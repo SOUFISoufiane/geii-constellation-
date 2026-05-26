@@ -18,38 +18,42 @@ plusieurs matières.
 ## Arbre des concepts (actuels et futurs)
 
 ```
-GEII Visual Toolbox
+GEII Visual Toolbox   (les 6 apps sont construites — ⭐ stable)
 ├── 1. Signaux & Transformées        [signals-transforms]
 │   ├── Signal Observatory ⭐
 │   └── (futur) Spectrogramme Lab
 │
 ├── 2. Systèmes & Asservissement     [systems-control]
-│   ├── Servo Lab 🚧
+│   ├── Servo Lab ⭐
 │   └── (futur) State-space Visualizer
 │
 ├── 3. Circuits Analogiques          [circuits-analog]
-│   ├── Circuits Interactifs 🚧
+│   ├── Circuits Interactifs ⭐
 │   └── (futur) AOP Designer
 │
 ├── 4. Logique Numérique             [digital-logic]
-│   ├── Digital Lab 🚧
+│   ├── Digital Lab ⭐
 │   └── (futur) HDL Playground
 │
 ├── 5. Mathématiques (fondations)    [math-foundations]
-│   ├── Math Visualizer 🚧
+│   ├── Math Visualizer ⭐
 │   └── (futur) Linear Algebra Theater
 │
-├── (futur) 6. Énergie & Puissance   [power-energy]
+├── 6. Robotique                     [robotics]
+│   ├── Robotique ⭐  (2R, rotations, transf. homogènes, repères, 6-axes, VAL3)
+│   └── (futur) Trajectoires & interpolation
+│
+├── (futur) 7. Énergie & Puissance   [power-energy]
 │   ├── Triphasé Visualizer
 │   ├── Convertisseur DC-DC Lab
 │   └── Moteurs (DC, asynchrone)
 │
-├── (futur) 7. Communications        [communications]
+├── (futur) 8. Communications        [communications]
 │   ├── Modulation Lab (AM/FM/PSK)
 │   ├── Codage de canal
 │   └── Antennes & propagation
 │
-└── (futur) 8. Embarqué              [embedded]
+└── (futur) 9. Embarqué              [embedded]
     ├── Bus Lab (I2C, SPI, UART)
     ├── ARM Cortex Visualizer
     └── DSP Algorithms
@@ -66,6 +70,7 @@ GEII Visual Toolbox
 | Circuits Analogiques      | Électronique, Énergie, Physique                    | S1 → S5     |
 | Logique Numérique         | Élec. numérique, Informatique                      | S2 → S4     |
 | Mathématiques             | Maths                                              | S1 → S6     |
+| Robotique                 | Robotique industrielle, Maths                      | S4 → ing.   |
 | (futur) Énergie           | Énergie, Électrotechnique                          | S3 → S5     |
 | (futur) Communications    | Télécom, Signal                                    | S5 → S6     |
 | (futur) Embarqué          | Informatique industrielle, Élec. numérique         | S4 → S6     |
