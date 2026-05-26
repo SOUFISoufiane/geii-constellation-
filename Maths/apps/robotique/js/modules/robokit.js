@@ -40,6 +40,111 @@ export function dhTransform(theta, d, a, alpha) {
     ];
 }
 
+// ── 6R robot (spherical-wrist) FK + closed-form IK ───────────────────
+// Single source of truth for the 6-axis arm geometry. DH (Stäubli TX-like):
+//   i | θ          d     a     α
+//   1 | q1         d1    0    -90°
+//   2 | q2-90°     0     a2    0
+//   3 | q3         0     0    -90°
+//   4 | q4         d4    0    +90°
+//   5 | q5         0     0    -90°
+//   6 | q6         d6    0     0
+export const ROBOT6 = { d1: 1.0, a2: 1.2, d4: 1.0, d6: 0.4 };
+
+export function dhRows6(q) {
+    const { d1, a2, d4, d6 } = ROBOT6;
+    return [
+        [q[0],            d1, 0,  -90*DEG],
+        [q[1] - 90*DEG,   0,  a2,   0    ],
+        [q[2],            0,  0,  -90*DEG],
+        [q[3],            d4, 0,  +90*DEG],
+        [q[4],            0,  0,  -90*DEG],
+        [q[5],            d6, 0,   0     ]
+    ];
+}
+
+// Forward kinematics → list of cumulative frames [base, T01, T02, … T06].
+export function fk6(q) {
+    const frames = [I4()];
+    let T = I4();
+    for (const [th,d,a,al] of dhRows6(q)) { T = matmul4(T, dhTransform(th,d,a,al)); frames.push(T); }
+    return frames;
+}
+
+// Numerical IK by damped least squares (Levenberg–Marquardt on a 6-D pose
+// error), seeded from the arm's current joints. Robust and DH-offset-agnostic:
+// it differentiates the real fk6 rather than hand-deriving a closed form, so it
+// can never silently disagree with the FK the visualisation draws.
+//
+//   T06   target tool transform (4×4)
+//   qSeed current joints (rad) — IK stays near them for continuity
+// Returns { q:[…6], ok, posErr } ; ok=false if it can't converge (out of reach).
+export function ik6(T06, qSeed = [0,0,0,0,0,0]) {
+    const targetPos = [T06[0][3], T06[1][3], T06[2][3]];
+    const targetR = [[T06[0][0],T06[0][1],T06[0][2]],
+                     [T06[1][0],T06[1][1],T06[1][2]],
+                     [T06[2][0],T06[2][1],T06[2][2]]];
+
+    // 6-vector pose error: position diff + orientation diff (axis·angle of Rerr).
+    function poseError(q) {
+        const T = fk6(q)[6];
+        const ep = [targetPos[0]-T[0][3], targetPos[1]-T[1][3], targetPos[2]-T[2][3]];
+        // Rerr = targetR · Rcurrentᵀ ; small-angle vector = 0.5*(off-diagonals)
+        const Rc = [[T[0][0],T[0][1],T[0][2]],[T[1][0],T[1][1],T[1][2]],[T[2][0],T[2][1],T[2][2]]];
+        const Re = [[0,0,0],[0,0,0],[0,0,0]];
+        for (let i=0;i<3;i++) for (let j=0;j<3;j++) for (let k=0;k<3;k++) Re[i][j]+=targetR[i][k]*Rc[j][k];
+        const eo = [ (Re[2][1]-Re[1][2])/2, (Re[0][2]-Re[2][0])/2, (Re[1][0]-Re[0][1])/2 ];
+        return [...ep, ...eo];
+    }
+
+    let q = qSeed.slice();
+    const lambda = 0.05;            // damping
+    for (let iter=0; iter<80; iter++) {
+        const e = poseError(q);
+        const errNorm = Math.hypot(...e);
+        if (errNorm < 1e-5) return { q: q.map(wrapPi), ok:true, posErr: Math.hypot(e[0],e[1],e[2]) };
+
+        // Numerical Jacobian J (6×6): ∂pose/∂q.
+        const h = 1e-6;
+        const J = [[],[],[],[],[],[]];
+        for (let j=0;j<6;j++) {
+            const qp = q.slice(); qp[j]+=h;
+            const ep = poseError(qp);
+            for (let i=0;i<6;i++) J[i][j] = (e[i]-ep[i]) / h;  // note sign: d(err)/dq
+        }
+        // Damped least squares: Δq = (JᵀJ + λ²I)⁻¹ Jᵀ e
+        const JT = transpose6(J);
+        const JTJ = matmulN(JT, J);
+        for (let i=0;i<6;i++) JTJ[i][i] += lambda*lambda;
+        const JTe = matvecN(JT, e);
+        const dq = solve6(JTJ, JTe);
+        if (!dq) break;
+        // step-limit for stability
+        const step = Math.min(1, 0.4 / (Math.hypot(...dq)+1e-9));
+        for (let i=0;i<6;i++) q[i] += dq[i]*step;
+    }
+    const e = poseError(q);
+    const posErr = Math.hypot(e[0],e[1],e[2]);
+    return { q: q.map(wrapPi), ok: posErr < 5e-3, posErr };
+}
+
+// small linear-algebra helpers for the 6×6 solve
+const wrapPi = a => Math.atan2(Math.sin(a), Math.cos(a));
+function transpose6(M){const T=[];for(let i=0;i<M.length;i++){T.push([]);for(let j=0;j<M[0].length;j++)T[i].push(M[j][i]);}return T;}
+function matmulN(A,B){const n=A.length,m=B[0].length,p=B.length;const C=[];for(let i=0;i<n;i++){C.push([]);for(let j=0;j<m;j++){let s=0;for(let k=0;k<p;k++)s+=A[i][k]*B[k][j];C[i].push(s);}}return C;}
+function matvecN(A,v){return A.map(row=>row.reduce((s,a,k)=>s+a*v[k],0));}
+// Gaussian elimination for a 6×6 (or n×n) system Ax=b.
+function solve6(A,b){
+    const n=b.length; const M=A.map((r,i)=>[...r,b[i]]);
+    for(let c=0;c<n;c++){
+        let piv=c; for(let r=c+1;r<n;r++) if(Math.abs(M[r][c])>Math.abs(M[piv][c])) piv=r;
+        if(Math.abs(M[piv][c])<1e-12) return null;
+        [M[c],M[piv]]=[M[piv],M[c]];
+        for(let r=0;r<n;r++){ if(r===c) continue; const f=M[r][c]/M[c][c]; for(let k=c;k<=n;k++) M[r][k]-=f*M[c][k]; }
+    }
+    return M.map((row,i)=>row[n]/row[i]);
+}
+
 // ── Pose ⇄ matrix (Stäubli VAL3 / course convention) ─────────────────
 // A pose is {x, y, z, rx, ry, rz} (mm, degrees). The orientation is built by
 // successive rotations about the FIXED world axes x₀, then y₀, then z₀ — i.e.

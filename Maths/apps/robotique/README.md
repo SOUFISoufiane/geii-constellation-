@@ -45,6 +45,22 @@ Matrice 4×4 T = [ R | p ; 0 0 0 1 ] (TD2 Ex. 5-8).
 - Inverse T⁻¹ = [ Rᵀ | −Rᵀp ; … ], affichée dans le readout.
 - Repères A (monde) et B (transformé) tracés en 3D avec le point dans les deux repères.
 
+### 🌐 Repères & points
+Repère World + un repère REF1 (position + orientation). Un point appris dans REF1
+est exprimé dans World (ᵂp = T·ᴿp), avec un point d'approche décalé selon l'axe z de
+REF1 — l'idée « appro » du TP Stäubli, en 3D.
+
+### 🦿 Bras 6 axes
+Robot sériel 6R (type Stäubli TX, paramètres de Denavit–Hartenberg). Deux modes de
+commande, comme le pupitre :
+- **Articulaire (movej)** : jog de chaque axe q₁..q₆.
+- **Cartésien (movel)** : commande de la pose de l'outil (X/Y/Z + RX/RY/RZ) ; la
+  cinématique inverse (moindres carrés amortis, amorcée depuis la config courante)
+  résout les 6 axes pour suivre la consigne. Pose hors d'atteinte → le bras se place
+  au plus près et le signale.
+Les deux modes restent synchronisés. Détection des singularités poignet/coude/épaule.
+FK & IK partagées dans `robokit.js` (testées : 3000 allers-retours FK∘IK, erreur < 2·10⁻³).
+
 ## Dépendances techniques
 - Vanilla JS + ES modules ; pas de framework.
 - Plotly.js pour les tracés 2D (bras) et 3D (repères) — chargé via CDN.

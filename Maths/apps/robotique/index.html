@@ -232,21 +232,49 @@
     <div class="dashboard module" id="mod-arm6r">
         <div class="controls">
             <h2 class="panel-title">🦿 Bras 6 axes</h2>
-            <p class="hint">Robot sériel 6R (type Stäubli TX) modélisé par paramètres de Denavit–Hartenberg. Bouger les axes ; le poignet sphérique (axes 4-5-6) révèle les singularités (TP Stäubli §VIII).</p>
+            <p class="hint">Robot sériel 6R (type Stäubli TX, paramètres de Denavit–Hartenberg). Comme le pupitre : mode articulaire (movej) pour bouger chaque axe, ou mode cartésien (movel) pour commander la pose de l'outil — la cinématique inverse résout les 6 axes.</p>
 
-            <div class="section-title">Axes articulaires (°)</div>
-            <div class="control-group"><label>q₁ (base): <span class="val" id="val-q1">0</span></label>
-                <input type="range" id="q1" min="-180" max="180" step="1" value="0"></div>
-            <div class="control-group"><label>q₂ (épaule): <span class="val" id="val-q2">30</span></label>
-                <input type="range" id="q2" min="-180" max="180" step="1" value="30"></div>
-            <div class="control-group"><label>q₃ (coude): <span class="val" id="val-q3">60</span></label>
-                <input type="range" id="q3" min="-180" max="180" step="1" value="60"></div>
-            <div class="control-group"><label>q₄ (poignet 1): <span class="val" id="val-q4">0</span></label>
-                <input type="range" id="q4" min="-180" max="180" step="1" value="0"></div>
-            <div class="control-group"><label>q₅ (poignet 2): <span class="val" id="val-q5">45</span></label>
-                <input type="range" id="q5" min="-180" max="180" step="1" value="45"></div>
-            <div class="control-group"><label>q₆ (poignet 3): <span class="val" id="val-q6">0</span></label>
-                <input type="range" id="q6" min="-180" max="180" step="1" value="0"></div>
+            <div class="section-title">Mode de commande</div>
+            <div class="seg" id="arm6-mode">
+                <button data-mode="joint" class="active">Articulaire (movej)</button>
+                <button data-mode="cartesian">Cartésien (movel)</button>
+            </div>
+
+            <!-- JOINT controls -->
+            <div id="arm6-joint">
+                <div class="section-title">Axes articulaires (°)</div>
+                <div class="control-group"><label>q₁ (base): <span class="val" id="val-q1">0</span></label>
+                    <input type="range" id="q1" min="-180" max="180" step="1" value="0"></div>
+                <div class="control-group"><label>q₂ (épaule): <span class="val" id="val-q2">30</span></label>
+                    <input type="range" id="q2" min="-180" max="180" step="1" value="30"></div>
+                <div class="control-group"><label>q₃ (coude): <span class="val" id="val-q3">60</span></label>
+                    <input type="range" id="q3" min="-180" max="180" step="1" value="60"></div>
+                <div class="control-group"><label>q₄ (poignet 1): <span class="val" id="val-q4">0</span></label>
+                    <input type="range" id="q4" min="-180" max="180" step="1" value="0"></div>
+                <div class="control-group"><label>q₅ (poignet 2): <span class="val" id="val-q5">45</span></label>
+                    <input type="range" id="q5" min="-180" max="180" step="1" value="45"></div>
+                <div class="control-group"><label>q₆ (poignet 3): <span class="val" id="val-q6">0</span></label>
+                    <input type="range" id="q6" min="-180" max="180" step="1" value="0"></div>
+            </div>
+
+            <!-- CARTESIAN controls -->
+            <div id="arm6-cart" style="display:none">
+                <div class="section-title">Translation de l'outil</div>
+                <div class="control-group"><label>X: <span class="val" id="val-c6-x">0</span></label>
+                    <input type="range" id="c6-x" min="-3.6" max="3.6" step="0.02" value="0"></div>
+                <div class="control-group"><label>Y: <span class="val" id="val-c6-y">0</span></label>
+                    <input type="range" id="c6-y" min="-3.6" max="3.6" step="0.02" value="0"></div>
+                <div class="control-group"><label>Z: <span class="val" id="val-c6-z">0</span></label>
+                    <input type="range" id="c6-z" min="0" max="3.6" step="0.02" value="0"></div>
+                <div class="section-title">Orientation de l'outil (°)</div>
+                <div class="control-group"><label>RX: <span class="val" id="val-c6-rx">0</span></label>
+                    <input type="range" id="c6-rx" min="-180" max="180" step="1" value="0"></div>
+                <div class="control-group"><label>RY: <span class="val" id="val-c6-ry">0</span></label>
+                    <input type="range" id="c6-ry" min="-180" max="180" step="1" value="0"></div>
+                <div class="control-group"><label>RZ: <span class="val" id="val-c6-rz">0</span></label>
+                    <input type="range" id="c6-rz" min="-180" max="180" step="1" value="0"></div>
+                <p class="hint">Déplace l'effecteur dans le repère World ; la CI suit le pose. Hors d'atteinte → le bras se place au plus près.</p>
+            </div>
 
             <div class="readout" id="arm6-readout"></div>
         </div>
