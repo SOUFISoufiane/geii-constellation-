@@ -2,43 +2,77 @@
 
 Multi-AI collaboration guidelines for GEII Visual Toolbox project.
 
+Two agents work this repo: **Claude Code** and **Gemini (Google Antigravity)**,
+often running at the same time on the same working tree. This file defines lanes
+so we don't overwrite each other or pollute git history.
+
+## Current Project State (2026-05-26)
+
+All five apps are **built**, not stubs:
+- `signal-observatory` — mature reference app
+- `circuits` — RLC / Kirchhoff / Thévenin
+- `automatique` — PID / root locus / Bode
+- `maths` — 3D surface / ODE (RK4) / Laplace
+- `numerique` — truth table / Karnaugh / VHDL
+
+The old "Gemini writes specs for stub apps" model is retired — there are no stubs
+left to spec. Work now is fixes, polish, new modules, and the `kb/` knowledge base.
+
 ## Scope Boundaries
 
-### Claude (Haiku/Sonnet/Opus)
+### Claude (Code)
 - **Primary architect & implementer** of the platform shell
 - Shell infrastructure: `shared/css/`, `shared/js/`, `index.html` (home page)
-- Signal Observatory migration & testing
-- Documentation (CONVENTIONS.md, CONCEPTS.md)
+- Plotly rendering layer (`shared/js/plot-fit.js`), responsive layer
+  (`shared/css/app-responsive.css`)
+- App module JS (`apps/*/js/`), signal-observatory
 - Final QA + deployment
 
-### Gemini CLI
+### Gemini (Antigravity)
 - **Research & exploration** (documentation, best practices, alternatives)
 - **Code review & feedback** on Claude's implementations
-- **Parallel work on stub app READMEs** (spec writing, feature lists)
-- **Knowledge synthesis** (if needed for decision-making)
+- **App READMEs** (`apps/<id>/README.md`) and the `kb/` knowledge base content
+- **Knowledge synthesis** for decision-making
 
 ## Explicit Overlap to Avoid
 
-❌ **Do not both write:**
-- `shared/manifest.js` — Claude owns this; Gemini reviews
-- `apps/signal-observatory/index.html` — Claude owns migration; Gemini can QA
-- `index.html` (home page) — Claude owns design & implementation; Gemini can suggest UX improvements via chat
+❌ **Do not both edit at the same time:**
+- `shared/css/*` and `shared/js/*` — Claude owns; Gemini reviews
+- `apps/*/index.html` and `apps/*/js/*` — Claude owns; Gemini can QA / suggest
+- `index.html` (home page) — Claude owns; Gemini suggests UX via chat
+- `apps/signal-observatory/*` — Claude owns
 
-✅ **Can happen in parallel:**
-- Claude builds shell infrastructure
-- Gemini writes detailed spec for each stub app (circuits, automatique, numerique, maths) in `apps/<id>/README.md`
-- Gemini researches tech stack recommendations for future apps (e.g., what plotting library for Bode diagrams?)
+✅ **Safe to run in parallel:**
+- Claude on shell / app JS / CSS
+- Gemini on `apps/<id>/README.md`, `kb/` docs, research notes
+
+## Git Hygiene (important — this bit us)
+
+Both agents commit to the same local `master` (no remote). To avoid the mislabeled,
+debris-laden commits seen on 2026-05-26:
+
+1. **Stage intentionally.** Never `git add -A` / `git add .` — it sweeps the other
+   agent's in-flight files and scratch output into your commit. Stage only the
+   specific paths you changed.
+2. **Honest commit messages.** The message must describe the actual diff. Do not
+   reuse a stale template title (e.g. "implement circuit analysis tool" on a commit
+   that only changes CSS).
+3. **Debris is gitignored** (`.gitignore` at repo root): `.playwright-mcp/`,
+   root-level `*.png` / `audit-*.png`, `node_modules/`, `.claude/scheduled_tasks.lock`.
+   Do not force-add these. They are scratch output, never source.
+4. **Don't commit the other agent's working files.** If `git status` shows files
+   you didn't touch, leave them unstaged.
 
 ## Communication Protocol
 
-1. **Before major commits:** Brief status in chat (what's done, what's next)
-2. **Conflict detected?** Claude pauses, notes the overlap in chat, Gemini responds with findings/suggestions
-3. **Code review:** Gemini can review Claude's shell code before it ships; provide feedback via chat
-4. **Decision requests:** If stuck, Claude asks Gemini for research/alternative approaches
+1. **Before major commits:** brief status in chat (what's done, what's next)
+2. **Conflict detected?** Pause, note the overlap in chat, let the owner resolve
+3. **Code review:** Gemini can review Claude's shell code before it ships
+4. **Decision requests:** if stuck, ask the other agent for research / alternatives
 
 ## Project Memory
 
-- **Claude** updates `.claude/projects/.../memory/` (project status, technical decisions)
+- **Claude** updates `.claude/projects/.../memory/` (project status, decisions)
 - **Gemini** can read memory but should not write to it (avoid sync conflicts)
 - **Both read** `CLAUDE.md`, `GEMINI.md`, and project memory at session start
 
@@ -48,9 +82,10 @@ Multi-AI collaboration guidelines for GEII Visual Toolbox project.
 shared/css/*
 shared/js/*
 index.html
+apps/*/index.html
+apps/*/js/*
 apps/signal-observatory/*
 .claude/
-docs/CONVENTIONS.md  (Claude owns structure; Gemini can suggest content)
 ```
 
 ## Files Gemini Can Own
@@ -60,21 +95,25 @@ apps/circuits/README.md
 apps/automatique/README.md
 apps/numerique/README.md
 apps/maths/README.md
-(research documents / decision logs if needed)
+kb/**            (SOPs, KBAs, knowledge base content)
+research documents / decision logs
 ```
 
 ## General Working Guidelines (Gemini)
 
-1. **Be mindful of file modifications**: Avoid mass refactoring or re-formatting code unnecessarily. Only edit specific lines required for the task.
-2. **Respect existing standards**: Follow conventions established by previous AI agents. Do not overwrite Claude-specific configuration files without explicit permission.
-3. **Coordinate tasks**: If a task might conflict with ongoing work, clarify the scope before modifying the codebase.
-4. **Clean State**: When completing tasks, leave the environment in a clean state (e.g., closing background servers).
+1. **Minimal edits**: no mass refactor / reformat. Touch only lines the task needs.
+2. **Respect existing standards**: follow conventions set by prior agents. Don't
+   overwrite Claude-owned config without explicit permission.
+3. **Coordinate**: if a task might conflict with ongoing work, clarify scope first.
+4. **Clean state**: close background servers; leave no scratch files committed.
 
 ## Decision Log
 
-None yet. Add entries as overlaps or key decisions emerge.
+- **2026-05-26** — Parallel auto-commits from Antigravity mislabeled their diffs and
+  committed `.playwright-mcp/` + audit screenshots. Resolution: added root
+  `.gitignore`, untracked `scheduled_tasks.lock`, tightened git-hygiene rules above.
 
 ---
 
-**Last Updated:** 2026-05-24  
-**Status:** Established before platform shell work begins
+**Last Updated:** 2026-05-26
+**Status:** All apps built; both agents active on shared local tree
