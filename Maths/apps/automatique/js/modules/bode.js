@@ -3,6 +3,7 @@
 // Phase margin  = 180° + phase at gain-crossover (|G|=1)
 // Gain margin   = −20·log10|G| at phase-crossover (phase=−180°)
 import { PALETTE, baseLayout } from '../../../signal-observatory/js/plots/plotly-config.js';
+import { renderPlot } from '../../../../shared/js/plot-fit.js';
 
 export function initBode() {
     const ids = ['k','w1','w2'];
@@ -63,7 +64,7 @@ export function initBode() {
             { x:W, y:phase, xaxis:'x2', yaxis:'y2', type:'scatter', mode:'lines', line:{color:PALETTE.cyan,width:2}, name:'∠G' }
         ];
         if (gcW) traces.push({ x:[gcW], y:[0], xaxis:'x', yaxis:'y', mode:'markers', marker:{size:10,color:PALETTE.red,symbol:'circle'}, name:'ω_co' });
-        Plotly.react('plot-bode', traces, layout, { displayModeBar:false, responsive:true });
+        renderPlot('plot-bode', traces, layout, { displayModeBar:false });
     }
 
     ids.forEach(k => els[k].addEventListener('input', update));

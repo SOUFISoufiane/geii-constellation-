@@ -1,5 +1,6 @@
 // 3D surface plotter z = f(x, y).
 import { PALETTE, COSMIC_COLORSCALE } from '../../../signal-observatory/js/plots/plotly-config.js';
+import { renderPlot } from '../../../../shared/js/plot-fit.js';
 
 export function initSurface() {
     const inputFunc = document.getElementById('func-input');
@@ -32,8 +33,8 @@ export function initSurface() {
                 camera: { eye: { x: 1.5, y: 1.5, z: 1.2 } }
             }
         };
-        Plotly.react('plot-surface', [{ z, x: xArr, y: yArr, type: 'surface', colorscale: COSMIC_COLORSCALE, showscale: false }],
-            layout, { displayModeBar: false, responsive: true });
+        renderPlot('plot-surface', [{ z, x: xArr, y: yArr, type: 'surface', colorscale: COSMIC_COLORSCALE, showscale: false }],
+            layout, { displayModeBar: false });
     }
 
     btnPlot.addEventListener('click', plot);

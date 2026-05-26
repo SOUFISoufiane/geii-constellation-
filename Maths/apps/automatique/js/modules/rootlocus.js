@@ -3,6 +3,7 @@
 //   = s³ + (a+b+c)s² + (ab+ac+bc)s + (abc + K)
 // Roots found via Durand–Kerner (complex). Swept over K to draw the locus.
 import { PALETTE, baseLayout } from '../../../signal-observatory/js/plots/plotly-config.js';
+import { renderPlot } from '../../../../shared/js/plot-fit.js';
 
 // --- minimal complex helpers ---
 const cx = (re, im=0) => ({ re, im });
@@ -75,11 +76,11 @@ export function initRootLocus() {
             yaxis: { title: 'Im', gridcolor: PALETTE.bgGrid, zeroline:true, zerolinecolor: PALETTE.textDim, scaleanchor:'x' },
             showlegend: true, legend:{orientation:'h', y:1.12, font:{size:9}}, margin:{t:36,b:40,l:46,r:16}
         });
-        Plotly.react('plot-rl', [
+        renderPlot('plot-rl', [
             { x: reAll, y: imAll, mode:'markers', type:'scatter', name:'Locus', marker:{ size:3, color: PALETTE.cyan, opacity:0.5 } },
             { x: olRe, y: olIm, mode:'markers', type:'scatter', name:'Pôles BO (K=0)', marker:{ size:12, color: PALETTE.gold, symbol:'x', line:{width:2} } },
             { x: selRe, y: selIm, mode:'markers', type:'scatter', name:`Pôles BF (K=${Ksel})`, marker:{ size:11, color: stable?PALETTE.green:PALETTE.red, symbol:'circle' } }
-        ], layout, { displayModeBar:false, responsive:true });
+        ], layout, { displayModeBar:false });
     }
 
     ids.forEach(k => els[k].addEventListener('input', update));

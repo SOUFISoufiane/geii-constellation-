@@ -1,5 +1,6 @@
 // RLC series — step response of Vc(t) to a 10 V step.
 import { PALETTE, baseLayout } from '../../../signal-observatory/js/plots/plotly-config.js';
+import { renderPlot } from '../../../../shared/js/plot-fit.js';
 
 export function initRlc() {
     const els = {
@@ -49,7 +50,7 @@ export function initRlc() {
             xaxis: { title: 'Temps (ms)', gridcolor: PALETTE.bgGrid },
             yaxis: { title: 'Tension (V)', gridcolor: PALETTE.bgGrid }
         });
-        Plotly.react('plot-rlc', [trace], layout, { displayModeBar: false, responsive: true });
+        renderPlot('plot-rlc', [trace], layout, { displayModeBar: false });
     }
 
     [els.r, els.l, els.c].forEach(s => s.addEventListener('input', update));

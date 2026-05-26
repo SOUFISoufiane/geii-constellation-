@@ -2,6 +2,7 @@
 //   Plant:  y'' + 2ζω₀ y' + ω₀² y = K ω₀² u
 //   u = Kp·e + Ki·∫e + Kd·ė ,  e = consigne − y
 import { PALETTE, baseLayout } from '../../../signal-observatory/js/plots/plotly-config.js';
+import { renderPlot } from '../../../../shared/js/plot-fit.js';
 
 export function initPid() {
     const ids = ['k','w0','zeta','kp','ki','kd'];
@@ -46,10 +47,10 @@ export function initPid() {
             yaxis: { title: 'Sortie y(t)', gridcolor: PALETTE.bgGrid },
             showlegend: true, legend: { orientation:'h', y:1.12, font:{size:9} }, margin:{t:36,b:40,l:46,r:16}
         });
-        Plotly.react('plot-pid', [
+        renderPlot('plot-pid', [
             { x: tArr, y: spArr, name: 'Consigne', type:'scatter', line:{ color:'rgba(255,255,255,0.3)', dash:'dash' } },
             { x: tArr, y: yArr, name: 'y(t)', type:'scatter', line:{ color: PALETTE.gold, width:3 } }
-        ], layout, { displayModeBar:false, responsive:true });
+        ], layout, { displayModeBar:false });
     }
 
     ids.forEach(k => els[k].addEventListener('input', update));

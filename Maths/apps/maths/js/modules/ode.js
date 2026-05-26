@@ -1,6 +1,7 @@
 // 2nd-order linear ODE  a·y'' + b·y' + c·y = f(t)  solved with classic RK4.
 // State form: x1=y, x2=y'.  x1'=x2 ; x2' = (f(t) − b·x2 − c·x1)/a.
 import { PALETTE, baseLayout } from '../../../signal-observatory/js/plots/plotly-config.js';
+import { renderPlot } from '../../../../shared/js/plot-fit.js';
 
 export function initOde() {
     const ids = ['a','b','c','y0','v0'];
@@ -45,8 +46,8 @@ export function initOde() {
             xaxis: { title: 'Temps t', gridcolor: PALETTE.bgGrid },
             yaxis: { title: 'y(t)', gridcolor: PALETTE.bgGrid }
         });
-        Plotly.react('plot-ode', [{ x: T, y: Y, type: 'scatter', mode: 'lines', line: { color: PALETTE.purple, width: 2.5 }, name: 'y(t)' }],
-            layout, { displayModeBar: false, responsive: true });
+        renderPlot('plot-ode', [{ x: T, y: Y, type: 'scatter', mode: 'lines', line: { color: PALETTE.purple, width: 2.5 }, name: 'y(t)' }],
+            layout, { displayModeBar: false });
     }
 
     ids.forEach(k => els[k].addEventListener('input', update));

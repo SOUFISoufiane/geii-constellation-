@@ -1,5 +1,6 @@
 // Laplace transform — table lookup with step-by-step derivation + pole-zero map.
 import { PALETTE, baseLayout } from '../../../signal-observatory/js/plots/plotly-config.js';
+import { renderPlot } from '../../../../shared/js/plot-fit.js';
 
 // Each entry: given a, ω → { steps:[{lbl,tex}], poles:[{re,im}], zeros:[{re,im}] }
 function transform(kind, a, w) {
@@ -75,7 +76,7 @@ export function initLaplace() {
         ];
         if (r.zeros.length) traces.push({ x: r.zeros.map(z=>z.re), y: r.zeros.map(z=>z.im), mode: 'markers', type: 'scatter',
               name: 'Zéros', marker: { size: 12, color: PALETTE.green, symbol: 'circle-open', line: { width: 2 } } });
-        Plotly.react('plot-lap', traces, layout, { displayModeBar: false, responsive: true });
+        renderPlot('plot-lap', traces, layout, { displayModeBar: false });
     }
 
     fn.addEventListener('change', render);

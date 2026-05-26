@@ -3,6 +3,7 @@
 //   Rth = R1 ∥ R2             (source killed: R1 parallel R2)
 //   Load line: I_load(R_load) = Vth / (Rth + R_load)
 import { PALETTE, baseLayout } from '../../../signal-observatory/js/plots/plotly-config.js';
+import { renderPlot } from '../../../../shared/js/plot-fit.js';
 
 export function initThevenin() {
     const els = {
@@ -74,10 +75,10 @@ export function initThevenin() {
             showlegend: true, legend: { orientation: 'h', y: 1.15, font: { size: 9 } },
             margin: { t: 40, b: 40, l: 50, r: 50 }
         });
-        Plotly.react('plot-thev', [
+        renderPlot('plot-thev', [
             { x: rl, y: il, type: 'scatter', mode: 'lines', name: 'I_charge (mA)', line: { color: PALETTE.red, width: 2 } },
             { x: rl, y: vl, type: 'scatter', mode: 'lines', name: 'V_charge (V)', yaxis: 'y2', line: { color: PALETTE.gold, width: 2, dash: 'dot' } }
-        ], layout, { displayModeBar: false, responsive: true });
+        ], layout, { displayModeBar: false });
     }
 
     [els.e, els.r1, els.r2].forEach(s => s.addEventListener('input', update));
