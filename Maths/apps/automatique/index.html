@@ -5,20 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Servo Lab — GEII Visual Toolbox</title>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
-    <!-- We need numeric.js or similar for complex roots if we wanted full root locus, but we'll do time-domain PID manually -->
     <link rel="stylesheet" href="../../shared/css/theme.css">
     <link rel="stylesheet" href="../../shared/css/toolbox.css">
     <style>
-        body { padding-top: 50px; display: flex; flex-direction: column; overflow: hidden; }
+        body { padding-top: 50px; display: flex; flex-direction: column; overflow: hidden; height: 100vh; }
         .hud-scanlines, .vignette { position: fixed; inset: 0; pointer-events: none; }
+
+        .tabbar { display: flex; gap: 4px; padding: 0.5rem 1rem 0; position: relative; z-index: 10; }
+        .tab { background: rgba(0,0,0,0.4); border: 1px solid var(--rim); border-bottom: none;
+               color: var(--text-mid); padding: 8px 18px; border-radius: 8px 8px 0 0; cursor: pointer;
+               font-family: 'Space Mono', monospace; font-size: 0.85rem; transition: all .15s; }
+        .tab:hover { color: var(--text-bright); }
+        .tab.active { background: rgba(0,0,0,0.6); color: var(--accent-gold); border-color: var(--accent-gold); }
+
         .dashboard { display: flex; flex: 1; min-height: 0; padding: 1rem; gap: 1rem; position: relative; z-index: 10; }
-        .controls { width: 320px; background: rgba(0,0,0,0.5); border: 1px solid var(--rim); padding: 1rem; border-radius: 8px; display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; }
-        .plot-container { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid var(--rim); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
-        .control-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 8px;}
+        .controls { width: 320px; background: rgba(0,0,0,0.5); border: 1px solid var(--rim); padding: 1rem;
+                    border-radius: 8px; display: flex; flex-direction: column; gap: 0.5rem; overflow-y: auto; }
+        .stage { flex: 1; display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+        .plot-container { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid var(--rim);
+                          border-radius: 8px; overflow: hidden; min-height: 0; }
+        .control-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 6px; }
         .control-group label { color: var(--text-mid); font-size: 0.8rem; font-family: 'Space Mono', monospace; }
         .control-group input[type="range"] { accent-color: var(--accent-gold); }
-        .control-group span { color: var(--accent-gold); font-weight: bold; }
-        .section-title { margin: 0; color: var(--accent-gold); font-size: 1rem; border-bottom: 1px solid var(--rim); padding-bottom: 4px; }
+        .control-group span.val { color: var(--accent-gold); font-weight: bold; }
+        .section-title { margin: 0.5rem 0 0; color: var(--accent-gold); font-size: 0.95rem;
+                         border-bottom: 1px solid var(--rim); padding-bottom: 4px; }
+        .readout { font-family: 'Space Mono', monospace; font-size: 0.8rem; color: var(--text-bright);
+                   border-top: 1px solid var(--rim); padding-top: 0.75rem; margin-top: auto; }
+        .readout div { margin: 2px 0; }
+        h2.panel-title { margin: 0; color: var(--accent-gold); font-size: 1.1rem; }
+        .hint { color: var(--text-dim); font-size: 0.75rem; }
+        .module { display: none; flex: 1; min-height: 0; }
+        .module.active { display: flex; }
     </style>
 </head>
 <body>
@@ -30,43 +48,68 @@
         mountAppHeader('automatique');
     </script>
 
-    <div class="dashboard">
+    <div class="tabbar">
+        <button class="tab active" data-tab="pid">⟲ PID</button>
+        <button class="tab" data-tab="rootlocus">📍 Lieu des racines</button>
+        <button class="tab" data-tab="bode">📈 Bode & Stabilité</button>
+    </div>
+
+    <!-- ═══════════════ PID MODULE ═══════════════ -->
+    <div class="dashboard module active" id="mod-pid">
         <div class="controls">
-            <h2 style="margin: 0; color: var(--accent-gold); font-size: 1.2rem;">⟲ Servo Lab (PID)</h2>
-            <p style="color: var(--text-dim); font-size: 0.8rem;">Contrôle PID d'un procédé du 2nd ordre : G(s) = K / (s² + 2ζω₀s + ω₀²)</p>
-            
-            <div class="section-title" style="color:var(--accent-blue)">Procédé (Plant)</div>
-            <div class="control-group">
-                <label>Gain K: <span id="val-k" style="color:var(--accent-blue)">1</span></label>
-                <input type="range" id="slider-k" min="0.1" max="10" step="0.1" value="1">
-            </div>
-            <div class="control-group">
-                <label>Pulsation ω₀: <span id="val-w0" style="color:var(--accent-blue)">1</span></label>
-                <input type="range" id="slider-w0" min="0.1" max="5" step="0.1" value="1">
-            </div>
-            <div class="control-group">
-                <label>Amortissement ζ: <span id="val-zeta" style="color:var(--accent-blue)">0.5</span></label>
-                <input type="range" id="slider-zeta" min="0.1" max="2" step="0.1" value="0.5">
-            </div>
-
-            <div class="section-title" style="color:var(--accent-red); margin-top: 1rem;">Contrôleur PID</div>
-            <div class="control-group">
-                <label>Proportionnel Kp: <span id="val-kp" style="color:var(--accent-red)">2</span></label>
-                <input type="range" id="slider-kp" min="0" max="20" step="0.5" value="2">
-            </div>
-            <div class="control-group">
-                <label>Intégral Ki: <span id="val-ki" style="color:var(--accent-red)">0.5</span></label>
-                <input type="range" id="slider-ki" min="0" max="10" step="0.1" value="0.5">
-            </div>
-            <div class="control-group">
-                <label>Dérivé Kd: <span id="val-kd" style="color:var(--accent-red)">0.5</span></label>
-                <input type="range" id="slider-kd" min="0" max="10" step="0.1" value="0.5">
-            </div>
+            <h2 class="panel-title">⟲ Servo Lab (PID)</h2>
+            <p class="hint">Contrôle PID d'un procédé du 2nd ordre : G(s) = K·ω₀² / (s² + 2ζω₀s + ω₀²)</p>
+            <div class="section-title" style="color:var(--accent-blue)">Procédé</div>
+            <div class="control-group"><label>Gain K: <span class="val" id="val-k" style="color:var(--accent-blue)">1</span></label>
+                <input type="range" id="slider-k" min="0.1" max="10" step="0.1" value="1"></div>
+            <div class="control-group"><label>Pulsation ω₀: <span class="val" id="val-w0" style="color:var(--accent-blue)">1</span></label>
+                <input type="range" id="slider-w0" min="0.1" max="5" step="0.1" value="1"></div>
+            <div class="control-group"><label>Amortissement ζ: <span class="val" id="val-zeta" style="color:var(--accent-blue)">0.5</span></label>
+                <input type="range" id="slider-zeta" min="0.1" max="2" step="0.1" value="0.5"></div>
+            <div class="section-title" style="color:var(--accent-red)">Contrôleur PID</div>
+            <div class="control-group"><label>Proportionnel Kp: <span class="val" id="val-kp" style="color:var(--accent-red)">2</span></label>
+                <input type="range" id="slider-kp" min="0" max="20" step="0.5" value="2"></div>
+            <div class="control-group"><label>Intégral Ki: <span class="val" id="val-ki" style="color:var(--accent-red)">0.5</span></label>
+                <input type="range" id="slider-ki" min="0" max="10" step="0.1" value="0.5"></div>
+            <div class="control-group"><label>Dérivé Kd: <span class="val" id="val-kd" style="color:var(--accent-red)">0.5</span></label>
+                <input type="range" id="slider-kd" min="0" max="10" step="0.1" value="0.5"></div>
+            <div class="readout" id="pid-readout"></div>
         </div>
+        <div class="stage"><div class="plot-container"><div id="plot-pid" style="width:100%;height:100%;"></div></div></div>
+    </div>
 
-        <div class="plot-container">
-            <div id="plot" style="width: 100%; height: 100%;"></div>
+    <!-- ═══════════════ ROOT LOCUS MODULE ═══════════════ -->
+    <div class="dashboard module" id="mod-rootlocus">
+        <div class="controls">
+            <h2 class="panel-title">📍 Lieu des racines</h2>
+            <p class="hint">Boucle ouverte G(s)=K / ((s+a)(s+b)(s+c)). Trajectoire des pôles en boucle fermée quand K varie de 0 à ∞.</p>
+            <div class="control-group"><label>Pôle a: <span class="val" id="val-rl-a">1</span></label>
+                <input type="range" id="rl-a" min="0.2" max="10" step="0.1" value="1"></div>
+            <div class="control-group"><label>Pôle b: <span class="val" id="val-rl-b">3</span></label>
+                <input type="range" id="rl-b" min="0.2" max="10" step="0.1" value="3"></div>
+            <div class="control-group"><label>Pôle c: <span class="val" id="val-rl-c">6</span></label>
+                <input type="range" id="rl-c" min="0.2" max="10" step="0.1" value="6"></div>
+            <div class="control-group"><label>Gain K choisi: <span class="val" id="val-rl-k">10</span></label>
+                <input type="range" id="rl-k" min="0" max="300" step="1" value="10"></div>
+            <div class="readout" id="rl-readout"></div>
         </div>
+        <div class="stage"><div class="plot-container"><div id="plot-rl" style="width:100%;height:100%;"></div></div></div>
+    </div>
+
+    <!-- ═══════════════ BODE MODULE ═══════════════ -->
+    <div class="dashboard module" id="mod-bode">
+        <div class="controls">
+            <h2 class="panel-title">📈 Bode & Marges</h2>
+            <p class="hint">Boucle ouverte G(s)=K / (s·(1+s/ω₁)(1+s/ω₂)). Marges de gain et de phase.</p>
+            <div class="control-group"><label>Gain K: <span class="val" id="val-b-k">5</span></label>
+                <input type="range" id="b-k" min="0.1" max="50" step="0.1" value="5"></div>
+            <div class="control-group"><label>ω₁ (rad/s): <span class="val" id="val-b-w1">2</span></label>
+                <input type="range" id="b-w1" min="0.1" max="20" step="0.1" value="2"></div>
+            <div class="control-group"><label>ω₂ (rad/s): <span class="val" id="val-b-w2">10</span></label>
+                <input type="range" id="b-w2" min="0.1" max="50" step="0.1" value="10"></div>
+            <div class="readout" id="b-readout"></div>
+        </div>
+        <div class="stage"><div class="plot-container"><div id="plot-bode" style="width:100%;height:100%;"></div></div></div>
     </div>
 
     <script type="module" src="./js/main.js"></script>
