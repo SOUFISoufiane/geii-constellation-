@@ -1,18 +1,36 @@
 # SOP_signal-observatory_v1.0
 
 ## 1. Objective
-To document the standard operating procedures for the Signal Observatory app.
+To document the maintenance procedure for Signal Observatory — the toolbox's flagship
+Fourier/signal app (32 signals, 9 fusion modes, 8 filters).
 
 ## 2. Scope
-Applies to `Maths/apps/signal-observatory/`.
+Applies to `Maths/apps/signal-observatory/`. Key folders under `js/`: `plots/` (fusion-modes,
+plotly-config, convolution, raw-telemetry, algebra), `math/`, `ui/`, `derivations/`, plus
+`state.js` (reactive store) and `main.js`.
 
-## 3. Procedure
-1. **Adding Filters**: Add new signal processing filters in the `js/` directory.
-2. **Chart Rendering**: Ensure the charting library or canvas logic inside `index.html` and `js/` remains performant. 
-3. **Data Pipelines**: Maintain the Web Worker scripts if heavy computation is moved off the main thread.
+## 3. Prerequisites
+- Local Python dev server (`python dev_server.py 8123`).
+- This is the most mature, separately-architected app — treat it carefully. It is the
+  source of the shared `plots/plotly-config.js` (`PALETTE`, `baseLayout`) that the other
+  apps import.
 
-## 4. Troubleshooting
-- **Lagging UI**: If the signal sampling rate is too high, it might freeze the browser. Check the downsampling logic.
+## 4. Procedure
+1. **Fusion modes**: the 9 analytical views live in `js/plots/fusion-modes.js` (dispatcher).
+   Add a mode by extending the dropdown in `index.html` and the dispatcher.
+2. **Signals**: defined in the `math/` catalogues; derivations (formula panel) in
+   `derivations/`. Keep a signal's derivation in sync with its definition.
+3. **Theme-aware colors**: never hardcode hex — read via the `PALETTE` Proxy in
+   `plotly-config.js` (resolves CSS vars from `document.body` so themes propagate).
+4. **State**: `state.js` is a pub/sub store; UI reads/writes through it.
 
-## 5. Revision History
-- **v1.0**: Initial Creation.
+## 5. Troubleshooting
+- **Plotly "Cannot set property color"**: a shared font/layout object was mutated — return a
+  fresh object per call (see `getFont()` in `plotly-config.js`).
+- **Theme not propagating to plots**: code read a CSS var from `documentElement` instead of
+  `document.body` (themes target `body.theme-X`).
+- **Lagging UI on fast sliders**: `renderAll` full-recomputes every change (see Technical
+  Debt #3) — debounce or memoize if it bites.
+
+## 6. Revision History
+- **v1.0**: Rewritten to match the built app (added theme-aware palette + fusion-mode facts).

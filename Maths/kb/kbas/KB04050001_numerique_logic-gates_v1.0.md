@@ -1,14 +1,22 @@
-# KB04050001: Digital Logic Gates
+# KB04050001: Digital Lab (Logique numérique)
 
 ## 1. Feature Description
-The Numerique app lets you simulate digital logic gates (AND, OR, NOT, NAND, NOR, XOR).
+The Numérique app takes a Boolean function from a truth table to a minimized expression to
+synthesizable VHDL. Three tabs that all derive from one shared truth table: Table de vérité,
+Karnaugh, and VHDL.
 
 ## 2. How-To Use
-1. Open the **Numerique** app from the dashboard.
-2. Select a logic gate from the toolbar and place it on the board.
-3. Attach input toggles (0 or 1) to the input pins of the gate.
-4. Attach an output LED to the output pin.
-5. Toggle the inputs and observe the LED state.
+1. Open the GEII Visual Toolbox Galaxy, click the **Digital Lab** star.
+2. **📋 Table de vérité**: choose the number of inputs (2-4), then click the output cells (S)
+   to toggle 0/1. The canonical sum-of-products equation updates live.
+3. **🗺️ Karnaugh**: the K-map fills from the truth table, groups the 1-cells (Quine–McCluskey),
+   and shows the minimal SOP form (e.g. S = ĀC + B̄C).
+4. **⌨ VHDL**: generates the entity + dataflow architecture matching the minimal form, with a
+   Copy button.
 
 ## 3. Expected Outcome
-The LED will light up (1) or turn off (0) based on the truth table of the selected logic gate.
+Set outputs once in the truth table; the Karnaugh minimization and the VHDL code derive
+automatically and stay consistent.
+
+## 4. Related Articles
+- SOP_numerique_v1.0 (maintenance & conventions).
