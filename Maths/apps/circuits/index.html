@@ -5,18 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Circuits Interactifs — GEII Visual Toolbox</title>
     <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <link rel="stylesheet" href="../../shared/css/theme.css">
     <link rel="stylesheet" href="../../shared/css/toolbox.css">
     <style>
-        body { padding-top: 50px; display: flex; flex-direction: column; overflow: hidden; }
+        body { padding-top: 50px; display: flex; flex-direction: column; overflow: hidden; height: 100vh; }
         .hud-scanlines, .vignette { position: fixed; inset: 0; pointer-events: none; }
+
+        .tabbar { display: flex; gap: 4px; padding: 0.5rem 1rem 0; position: relative; z-index: 10; }
+        .tab { background: rgba(0,0,0,0.4); border: 1px solid var(--rim); border-bottom: none;
+               color: var(--text-mid); padding: 8px 18px; border-radius: 8px 8px 0 0; cursor: pointer;
+               font-family: 'Space Mono', monospace; font-size: 0.85rem; transition: all .15s; }
+        .tab:hover { color: var(--text-bright); }
+        .tab.active { background: rgba(0,0,0,0.6); color: var(--accent-red); border-color: var(--accent-red); }
+
         .dashboard { display: flex; flex: 1; min-height: 0; padding: 1rem; gap: 1rem; position: relative; z-index: 10; }
-        .controls { width: 300px; background: rgba(0,0,0,0.5); border: 1px solid var(--rim); padding: 1rem; border-radius: 8px; display: flex; flex-direction: column; gap: 1rem; }
-        .plot-container { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid var(--rim); border-radius: 8px; overflow: hidden; }
+        .controls { width: 300px; background: rgba(0,0,0,0.5); border: 1px solid var(--rim); padding: 1rem;
+                    border-radius: 8px; display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; }
+        .stage { flex: 1; display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+        .plot-container { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid var(--rim);
+                          border-radius: 8px; overflow: hidden; min-height: 0; }
+        .schematic { background: rgba(0,0,0,0.35); border: 1px solid var(--rim); border-radius: 8px; padding: 8px; }
         .control-group { display: flex; flex-direction: column; gap: 4px; }
         .control-group label { color: var(--text-mid); font-size: 0.8rem; font-family: 'Space Mono', monospace; }
         .control-group input[type="range"] { accent-color: var(--accent-red); }
-        .control-group span { color: var(--accent-red); font-weight: bold; }
+        .control-group span.val { color: var(--accent-red); font-weight: bold; }
+        .readout { font-family: 'Space Mono', monospace; font-size: 0.8rem; color: var(--text-bright);
+                   border-top: 1px solid var(--rim); padding-top: 0.75rem; margin-top: auto; }
+        .readout div { margin: 2px 0; }
+        .eqbox { font-size: 1rem; text-align: center; color: var(--text-bright); padding: 6px;
+                 background: rgba(0,0,0,0.3); border-radius: 6px; }
+        h2.panel-title { margin: 0; color: var(--accent-red); font-size: 1.1rem; }
+        .hint { color: var(--text-dim); font-size: 0.75rem; }
+        .module { display: none; flex: 1; min-height: 0; }
+        .module.active { display: flex; }
     </style>
 </head>
 <body>
@@ -28,35 +51,91 @@
         mountAppHeader('circuits');
     </script>
 
-    <div class="dashboard">
+    <div class="tabbar">
+        <button class="tab active" data-tab="rlc">⚡ RLC</button>
+        <button class="tab" data-tab="kirchhoff">🔀 Kirchhoff</button>
+        <button class="tab" data-tab="thevenin">🔋 Thévenin</button>
+    </div>
+
+    <!-- ═══════════════ RLC MODULE ═══════════════ -->
+    <div class="dashboard module active" id="mod-rlc">
         <div class="controls">
-            <h2 style="margin: 0; color: var(--accent-red); font-size: 1.2rem;">⚡ RLC Réponse Indicielle</h2>
-            <p style="color: var(--text-dim); font-size: 0.8rem;">Réponse d'un circuit RLC série à un échelon de tension E = 10V.</p>
-            
+            <h2 class="panel-title">⚡ RLC Réponse Indicielle</h2>
+            <p class="hint">Réponse d'un circuit RLC série à un échelon de tension E = 10 V.</p>
             <div class="control-group">
-                <label>Résistance R (Ω): <span id="val-r">10</span></label>
+                <label>Résistance R (Ω): <span class="val" id="val-r">10</span></label>
                 <input type="range" id="slider-r" min="0" max="100" step="1" value="10">
             </div>
-            
             <div class="control-group">
-                <label>Inductance L (mH): <span id="val-l" style="color:var(--accent-blue)">100</span></label>
+                <label>Inductance L (mH): <span class="val" id="val-l" style="color:var(--accent-blue)">100</span></label>
                 <input type="range" id="slider-l" min="1" max="1000" step="10" value="100">
             </div>
-            
             <div class="control-group">
-                <label>Capacité C (µF): <span id="val-c" style="color:var(--accent-green)">10</span></label>
+                <label>Capacité C (µF): <span class="val" id="val-c" style="color:var(--accent-green)">10</span></label>
                 <input type="range" id="slider-c" min="1" max="100" step="1" value="10">
             </div>
-
-            <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--rim); font-family: 'Space Mono', monospace; font-size: 0.8rem; color: var(--text-bright);">
+            <div class="readout">
                 <div>ω₀ = <span id="calc-w0">--</span> rad/s</div>
                 <div>ζ = <span id="calc-zeta">--</span></div>
                 <div id="calc-regime" style="color: var(--accent-gold); margin-top: 4px;">--</div>
             </div>
         </div>
+        <div class="stage">
+            <div class="plot-container"><div id="plot-rlc" style="width:100%;height:100%;"></div></div>
+        </div>
+    </div>
 
-        <div class="plot-container">
-            <div id="plot" style="width: 100%; height: 100%;"></div>
+    <!-- ═══════════════ KIRCHHOFF MODULE ═══════════════ -->
+    <div class="dashboard module" id="mod-kirchhoff">
+        <div class="controls">
+            <h2 class="panel-title">🔀 Lois de Kirchhoff</h2>
+            <p class="hint">Réseau à 2 mailles. Analyse par les courants de maille (Cramer).</p>
+            <div class="control-group">
+                <label>Source E (V): <span class="val" id="val-k-e">12</span></label>
+                <input type="range" id="k-e" min="1" max="24" step="1" value="12">
+            </div>
+            <div class="control-group">
+                <label>R1 (Ω): <span class="val" id="val-k-r1">100</span></label>
+                <input type="range" id="k-r1" min="10" max="1000" step="10" value="100">
+            </div>
+            <div class="control-group">
+                <label>R2 (Ω) — branche centrale: <span class="val" id="val-k-r2">220</span></label>
+                <input type="range" id="k-r2" min="10" max="1000" step="10" value="220">
+            </div>
+            <div class="control-group">
+                <label>R3 (Ω): <span class="val" id="val-k-r3">330</span></label>
+                <input type="range" id="k-r3" min="10" max="1000" step="10" value="330">
+            </div>
+            <div class="readout" id="k-readout"></div>
+        </div>
+        <div class="stage">
+            <div class="schematic"><div id="k-svg"></div></div>
+            <div class="eqbox" id="k-eq"></div>
+        </div>
+    </div>
+
+    <!-- ═══════════════ THÉVENIN MODULE ═══════════════ -->
+    <div class="dashboard module" id="mod-thevenin">
+        <div class="controls">
+            <h2 class="panel-title">🔋 Équivalent de Thévenin</h2>
+            <p class="hint">Réseau source + diviseur vu d'un port AB. On calcule Vth, Rth, puis la droite de charge.</p>
+            <div class="control-group">
+                <label>Source E (V): <span class="val" id="val-t-e">15</span></label>
+                <input type="range" id="t-e" min="1" max="30" step="1" value="15">
+            </div>
+            <div class="control-group">
+                <label>R1 (Ω) — série: <span class="val" id="val-t-r1">470</span></label>
+                <input type="range" id="t-r1" min="10" max="2000" step="10" value="470">
+            </div>
+            <div class="control-group">
+                <label>R2 (Ω) — parallèle: <span class="val" id="val-t-r2">680</span></label>
+                <input type="range" id="t-r2" min="10" max="2000" step="10" value="680">
+            </div>
+            <div class="readout" id="t-readout"></div>
+        </div>
+        <div class="stage">
+            <div class="schematic"><div id="t-svg"></div></div>
+            <div class="plot-container"><div id="plot-thev" style="width:100%;height:100%;"></div></div>
         </div>
     </div>
 
