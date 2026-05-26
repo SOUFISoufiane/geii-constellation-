@@ -1,5 +1,5 @@
 // Servo Lab MVP - Numerical integration of a PID loop
-import { PALETTE, baseLayout } from '../signal-observatory/js/plots/plotly-config.js';
+import { PALETTE, baseLayout } from '../../signal-observatory/js/plots/plotly-config.js';
 
 const els = {
     sliderK: document.getElementById('slider-k'),

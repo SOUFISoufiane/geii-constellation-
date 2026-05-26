@@ -1,5 +1,5 @@
 // Math Visualizer MVP - 3D Surface Plotter
-import { PALETTE, COSMIC_COLORSCALE } from '../signal-observatory/js/plots/plotly-config.js';
+import { PALETTE, COSMIC_COLORSCALE } from '../../signal-observatory/js/plots/plotly-config.js';
 
 const inputFunc = document.getElementById('func-input');
 const inputRange = document.getElementById('range-input');

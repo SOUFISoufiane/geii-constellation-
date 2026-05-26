@@ -1,5 +1,5 @@
 // RLC Step Response MVP
-import { PALETTE, baseLayout } from '../signal-observatory/js/plots/plotly-config.js';
+import { PALETTE, baseLayout } from '../../signal-observatory/js/plots/plotly-config.js';
 
 const els = {
     sliderR: document.getElementById('slider-r'),
