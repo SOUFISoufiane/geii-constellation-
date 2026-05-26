@@ -6,9 +6,10 @@ import { initRotation } from './modules/rotation.js';
 import { initHomogeneous } from './modules/homogeneous.js';
 import { initFrames } from './modules/frames.js';
 import { initArm6R } from './modules/arm6r.js';
+import { initVal3 } from './modules/val3.js';
 
-const INIT = { arm2r: initArm2R, rotation: initRotation, homogeneous: initHomogeneous, frames: initFrames, arm6r: initArm6R };
-const NEEDS_KATEX = new Set(['rotation', 'homogeneous']);
+const INIT = { arm2r: initArm2R, rotation: initRotation, homogeneous: initHomogeneous, frames: initFrames, arm6r: initArm6R, val3: initVal3 };
+const NEEDS_KATEX = new Set(['rotation', 'homogeneous', 'val3']);
 const started = new Set();
 
 function activate(tab) {

@@ -55,6 +55,13 @@
                        font-size: 0.8rem; margin-bottom: 6px; }
         .numinput { background: rgba(0,0,0,0.3); border: 1px solid var(--rim); color: var(--text-bright);
                     padding: 4px 6px; border-radius: 4px; font-family: 'Space Mono', monospace; width: 100%; box-sizing: border-box; }
+        /* 6-field pose grid (x y z / rx ry rz) */
+        .pose-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+        .pose-grid label { font-size: 0.68rem; color: var(--text-dim); font-family: 'Space Mono', monospace; }
+        .pose-grid .fld { display: flex; flex-direction: column; gap: 2px; }
+        .codebox { background: #05050f; border: 1px solid var(--accent-cyan); border-radius: 6px;
+                   padding: 8px 10px; font-family: 'Space Mono', monospace; font-size: 0.8rem;
+                   color: var(--accent-cyan); margin-top: 0.5rem; word-break: break-all; }
     </style>
 </head>
 <body>
@@ -72,6 +79,7 @@
         <button class="tab" data-tab="homogeneous">📐 Transf. homogènes</button>
         <button class="tab" data-tab="frames">🌐 Repères & points</button>
         <button class="tab" data-tab="arm6r">🦿 Bras 6 axes</button>
+        <button class="tab" data-tab="val3">⌨ VAL3 / trsf</button>
     </div>
 
     <!-- ═══════════════ BRAS 2R MODULE ═══════════════ -->
@@ -243,6 +251,65 @@
             <div class="readout" id="arm6-readout"></div>
         </div>
         <div class="stage"><div class="plot-container"><div id="plot-arm6" style="width:100%;height:100%;"></div></div></div>
+    </div>
+
+    <!-- ═══════════════ VAL3 / TRSF MODULE ═══════════════ -->
+    <div class="dashboard module" id="mod-val3">
+        <div class="controls">
+            <h2 class="panel-title">⌨ VAL3 / trsf</h2>
+            <p class="hint">Le bac à sable géométrique sous VAL3. Un point = pose (x,y,z,rx,ry,rz) que le contrôleur stocke en matrice 4×4. Teste appro / compose / setFrame chez toi, puis recopie la pose résultat dans le simulateur. Angles = Euler Stäubli (Rz·Ry·Rx).</p>
+
+            <div class="section-title">Opération VAL3</div>
+            <div class="seg" id="v3-op">
+                <button data-op="compose" class="active">compose</button>
+                <button data-op="appro">appro</button>
+                <button data-op="setframe">setFrame</button>
+            </div>
+
+            <div class="section-title" id="v3-base-title">Repère / point de base</div>
+            <div class="pose-grid">
+                <div class="fld"><label>x</label><input class="numinput" id="v3-base-x" type="number" value="400" step="10"></div>
+                <div class="fld"><label>y</label><input class="numinput" id="v3-base-y" type="number" value="30" step="10"></div>
+                <div class="fld"><label>z</label><input class="numinput" id="v3-base-z" type="number" value="200" step="10"></div>
+                <div class="fld"><label>rx°</label><input class="numinput" id="v3-base-rx" type="number" value="180" step="5"></div>
+                <div class="fld"><label>ry°</label><input class="numinput" id="v3-base-ry" type="number" value="0" step="5"></div>
+                <div class="fld"><label>rz°</label><input class="numinput" id="v3-base-rz" type="number" value="180" step="5"></div>
+            </div>
+
+            <!-- trsf offset (compose / appro) -->
+            <div id="v3-trsf-group">
+                <div class="section-title">Décalage trsf {x,y,z,rx,ry,rz}</div>
+                <div class="pose-grid">
+                    <div class="fld"><label>x</label><input class="numinput" id="v3-trsf-x" type="number" value="160" step="10"></div>
+                    <div class="fld"><label>y</label><input class="numinput" id="v3-trsf-y" type="number" value="50" step="10"></div>
+                    <div class="fld"><label>z</label><input class="numinput" id="v3-trsf-z" type="number" value="0" step="10"></div>
+                    <div class="fld"><label>rx°</label><input class="numinput" id="v3-trsf-rx" type="number" value="0" step="5"></div>
+                    <div class="fld"><label>ry°</label><input class="numinput" id="v3-trsf-ry" type="number" value="0" step="5"></div>
+                    <div class="fld"><label>rz°</label><input class="numinput" id="v3-trsf-rz" type="number" value="0" step="5"></div>
+                </div>
+            </div>
+
+            <!-- setFrame extra points -->
+            <div id="v3-setframe-group" style="display:none">
+                <div class="section-title">Point sur l'axe X (PA)</div>
+                <div class="pose-grid">
+                    <div class="fld"><label>x</label><input class="numinput" id="v3-sfx-x" type="number" value="500" step="10"></div>
+                    <div class="fld"><label>y</label><input class="numinput" id="v3-sfx-y" type="number" value="30" step="10"></div>
+                    <div class="fld"><label>z</label><input class="numinput" id="v3-sfx-z" type="number" value="200" step="10"></div>
+                </div>
+                <div class="section-title">Point sur le plan XY (PB)</div>
+                <div class="pose-grid">
+                    <div class="fld"><label>x</label><input class="numinput" id="v3-sfy-x" type="number" value="400" step="10"></div>
+                    <div class="fld"><label>y</label><input class="numinput" id="v3-sfy-y" type="number" value="130" step="10"></div>
+                    <div class="fld"><label>z</label><input class="numinput" id="v3-sfy-z" type="number" value="200" step="10"></div>
+                </div>
+            </div>
+
+            <div class="codebox" id="v3-code"></div>
+            <div class="matbox" style="margin-top:0.5rem"><div class="ttl">Matrice T du résultat</div><div id="v3-matrix"></div></div>
+            <div class="readout" id="v3-readout"></div>
+        </div>
+        <div class="stage"><div class="plot-container"><div id="plot-v3" style="width:100%;height:100%;"></div></div></div>
     </div>
 
     <script type="module" src="./js/main.js"></script>

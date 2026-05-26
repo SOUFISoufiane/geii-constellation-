@@ -40,6 +40,85 @@ export function dhTransform(theta, d, a, alpha) {
     ];
 }
 
+// ── Pose ⇄ matrix (Stäubli VAL3 / course convention) ─────────────────
+// A pose is {x, y, z, rx, ry, rz} (mm, degrees). The orientation is built by
+// successive rotations about the FIXED world axes x₀, then y₀, then z₀ — i.e.
+//   R = Rz(rz) · Ry(ry) · Rx(rx)
+// (TD2 p.12: "rotation autour de x₀, puis y₀, puis z₀"; matches Stäubli trsf.)
+export function poseToMatrix({ x, y, z, rx, ry, rz }) {
+    const cx=Math.cos(rx*DEG), sx=Math.sin(rx*DEG);
+    const cy=Math.cos(ry*DEG), sy=Math.sin(ry*DEG);
+    const cz=Math.cos(rz*DEG), sz=Math.sin(rz*DEG);
+    // R = Rz·Ry·Rx (expanded)
+    const R = [
+        [ cz*cy,  cz*sy*sx - sz*cx,  cz*sy*cx + sz*sx ],
+        [ sz*cy,  sz*sy*sx + cz*cx,  sz*sy*cx - cz*sx ],
+        [ -sy,    cy*sx,             cy*cx            ]
+    ];
+    return [
+        [R[0][0],R[0][1],R[0][2], x],
+        [R[1][0],R[1][1],R[1][2], y],
+        [R[2][0],R[2][1],R[2][2], z],
+        [0,0,0,1]
+    ];
+}
+
+// Inverse: recover {x,y,z,rx,ry,rz} (degrees) from a 4×4 transform, same
+// convention. Handles the gimbal-lock case (ry = ±90°) gracefully.
+export function matrixToPose(T) {
+    const x=T[0][3], y=T[1][3], z=T[2][3];
+    const r31 = -T[2][0];
+    const ry = Math.asin(Math.max(-1, Math.min(1, r31)));
+    let rx, rz;
+    if (Math.abs(r31) < 0.999999) {
+        rx = Math.atan2(T[2][1], T[2][2]);
+        rz = Math.atan2(T[1][0], T[0][0]);
+    } else { // gimbal lock: ry = ±90°, fix rz=0 and fold into rx
+        rz = 0;
+        rx = Math.atan2(-T[0][1], T[1][1]) * Math.sign(r31 || 1);
+    }
+    const d = a => a / DEG;
+    return { x, y, z, rx: d(rx), ry: d(ry), rz: d(rz) };
+}
+
+// ── VAL3 geometry primitives (pure, hardware-free) ───────────────────
+// trsf is a pose-like offset {x,y,z,rx,ry,rz}.
+//
+// compose(point, frame, trsf): place a point relative to `frame`, offset by
+// trsf. In matrix terms: T_result = T_frame · T_trsf, then the point is the
+// origin/pose of that result. (VAL3: compose(p, frame, trsf))
+export function valCompose(framePose, trsfPose) {
+    return matrixToPose(matmul4(poseToMatrix(framePose), poseToMatrix(trsfPose)));
+}
+
+// appro(point, trsf): offset expressed in the point's OWN frame (post-multiply).
+// T_result = T_point · T_trsf. (VAL3: appro(p, trsf))
+export function valAppro(pointPose, trsfPose) {
+    return matrixToPose(matmul4(poseToMatrix(pointPose), poseToMatrix(trsfPose)));
+}
+
+// setFrame(origin, ptOnX, ptOnY): build a frame from three taught points —
+// origin, a point defining +X, a point defining the XY plane (+Y side).
+// Returns the frame as a pose. (VAL3: setFrame(O, PA, PB, REF))
+export function valSetFrame(origin, ptX, ptY) {
+    const sub = (a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+    const norm = v=>{const n=Math.hypot(...v)||1;return v.map(c=>c/n);};
+    const cross=(a,b)=>[a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]];
+    const ex = norm(sub(ptX, origin));
+    let ey = sub(ptY, origin);
+    // Gram–Schmidt: remove the ex component so ey ⟂ ex.
+    const dot = ex[0]*ey[0]+ex[1]*ey[1]+ex[2]*ey[2];
+    ey = norm([ey[0]-dot*ex[0], ey[1]-dot*ex[1], ey[2]-dot*ex[2]]);
+    const ez = cross(ex, ey);
+    const T = [
+        [ex[0], ey[0], ez[0], origin[0]],
+        [ex[1], ey[1], ez[1], origin[1]],
+        [ex[2], ey[2], ez[2], origin[2]],
+        [0,0,0,1]
+    ];
+    return matrixToPose(T);
+}
+
 // Position (translation column) of a 4×4 transform.
 export const originOf = T => [T[0][3], T[1][3], T[2][3]];
 // Column j of the rotation part = direction of that frame axis in world coords.

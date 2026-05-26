@@ -26,6 +26,18 @@ Rotations élémentaires Rx(θ), Ry(θ), Rz(θ) (TD2 §1.3), avec composition R 
 - Repère 3D : axes initiaux en gris, axes tournés en rouge/vert/bleu.
 - Matrice R affichée en LaTeX (KaTeX), vérification det(R)=1 et Rᵀ=R⁻¹.
 
+### ⌨ VAL3 / trsf
+Le bac à sable géométrique sous VAL3 — pensé pour travailler à la maison ce qui
+sera tapé dans le simulateur à l'école. Un point robot = pose (x,y,z,rx,ry,rz)
+que le contrôleur stocke en matrice 4×4. Convention d'angles = Euler Stäubli /
+cours (R = Rz·Ry·Rx, rotations autour des axes fixes ; voir TD2 p.12).
+- **compose(point, frame, trsf)** — point relatif à un repère + décalage.
+- **appro(point, trsf)** — décalage exprimé dans le repère propre du point.
+- **setFrame(O, PA, PB)** — construit un repère à partir de 3 points (origine,
+  point sur X, point sur le plan XY).
+- Affiche la ligne VAL3 exacte, la matrice 4×4 résultante et la pose résultat à
+  **recopier telle quelle dans le simulateur**.
+
 ### 📐 Transformations homogènes
 Matrice 4×4 T = [ R | p ; 0 0 0 1 ] (TD2 Ex. 5-8).
 - Rotation autour d'un axe + translation p réglables.
