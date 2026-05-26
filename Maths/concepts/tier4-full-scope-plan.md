@@ -1,7 +1,9 @@
-# Tier 4 — Full-Scope Build Plan
+# Tier 4 — Full-Scope Build Plan  [STATUS: COMPLETED 2026-05-26]
 
-The four "MVP" apps shipped as single-feature stubs. This plan brings each to its
-manifest-described scope. Pattern for all: a left `.controls` panel + a main content
+The four "MVP" apps shipped as single-feature stubs. This plan brought each to its
+manifest-described scope. All four are now `status: 'stable'` in the manifest, each
+with 3 working tabs, headless-tested with math-correctness assertions, committed
+per-app (circuits 23306bd, automatique 6e0aa85, numerique a3082e1, maths 67078ca). Pattern for all: a left `.controls` panel + a main content
 area, a tab bar to switch modules, vanilla JS, Plotly (CDN) + KaTeX (CDN), and
 `PALETTE`/`baseLayout` imported from `../../signal-observatory/js/plots/plotly-config.js`.
 Each app gets a small per-module JS file under `apps/<id>/js/modules/` and a thin

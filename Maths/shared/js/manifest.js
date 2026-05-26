@@ -85,41 +85,41 @@ export const APPS = {
         name: 'Circuits Interactifs',
         tagline: 'Kirchhoff · Thévenin · RLC',
         icon: '⚡',
-        status: 'stub',
+        status: 'stable',
         concept: 'circuits-analog',
         matieres: ['Électronique'],
         path: 'apps/circuits/index.html',
-        description: 'Schémas SVG interactifs avec calcul de tensions/courants en temps réel.'
+        description: 'Réponse RLC, analyse de Kirchhoff par mailles (Cramer) avec schéma SVG annoté, et équivalent de Thévenin avec droite de charge.'
     },
     'automatique': {
         name: 'Servo Lab',
-        tagline: 'PID · Root locus · Réponses',
+        tagline: 'PID · Lieu des racines · Bode',
         icon: '⟲',
-        status: 'stub',
+        status: 'stable',
         concept: 'systems-control',
         matieres: ['Automatique S4', 'Maths'],
         path: 'apps/automatique/index.html',
-        description: 'PID interactif sur plant 2nd ordre, placement de pôles, marges de stabilité.'
+        description: 'PID interactif sur plant 2nd ordre, lieu des racines (solveur cubique), diagramme de Bode avec marges de gain et de phase.'
     },
     'numerique': {
         name: 'Digital Lab',
-        tagline: 'Karnaugh · FSM · VHDL',
+        tagline: 'Karnaugh · VHDL · Table de vérité',
         icon: '01',
-        status: 'stub',
+        status: 'stable',
         concept: 'digital-logic',
         matieres: ['Élec. numérique'],
         path: 'apps/numerique/index.html',
-        description: 'Simplification booléenne visuelle, simulateur de circuits logiques.'
+        description: 'Éditeur de table de vérité, minimisation Quine–McCluskey avec tableau de Karnaugh, et génération de code VHDL synthétisable.'
     },
     'maths': {
         name: 'Math Visualizer',
-        tagline: 'EDO · Laplace · Algèbre',
+        tagline: 'Surface 3D · EDO · Laplace',
         icon: '∫',
-        status: 'stub',
+        status: 'stable',
         concept: 'math-foundations',
         matieres: ['Maths S3-S6'],
         path: 'apps/maths/index.html',
-        description: 'Résolveur visuel EDO, Laplace pas-à-pas, espaces vectoriels animés.'
+        description: 'Traceur de surfaces 3D, résolveur d\'EDO du 2nd ordre par RK4, et transformée de Laplace pas-à-pas avec carte pôles-zéros.'
     }
 };
 
