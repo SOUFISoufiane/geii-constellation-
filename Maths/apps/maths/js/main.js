@@ -1,80 +1,26 @@
-// Math Visualizer MVP - 3D Surface Plotter
-import { PALETTE, COSMIC_COLORSCALE } from '../../signal-observatory/js/plots/plotly-config.js';
+// Math Visualizer — tab router. Modules init lazily on first activation.
+import { initSurface } from './modules/surface.js';
+import { initOde } from './modules/ode.js';
+import { initLaplace } from './modules/laplace.js';
 
-const inputFunc = document.getElementById('func-input');
-const inputRange = document.getElementById('range-input');
-const btnPlot = document.getElementById('btn-plot');
-const errMsg = document.getElementById('error-msg');
+const INIT = { surface: initSurface, ode: initOde, laplace: initLaplace };
+const started = new Set();
 
-function plotSurface() {
-    errMsg.textContent = "";
-    const funcStr = inputFunc.value;
-    const range = parseFloat(inputRange.value) || 5;
-    
-    // Safety check - simplistic evaluation. In production, use math.js
-    let f;
-    try {
-        f = new Function('x', 'y', `return ${funcStr};`);
-        // Test call
-        f(0,0);
-    } catch (e) {
-        errMsg.textContent = "Erreur de syntaxe JS dans la fonction.";
-        return;
+function activate(tab) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+    document.querySelectorAll('.module').forEach(m => m.classList.toggle('active', m.id === 'mod-' + tab));
+    if (!started.has(tab)) {
+        started.add(tab);
+        const run = () => { try { INIT[tab](); } catch (e) { console.error(`[maths:${tab}]`, e); } };
+        // Laplace uses katex; wait for it.
+        if (tab === 'laplace' && !window.katex) {
+            const w = setInterval(() => { if (window.katex) { clearInterval(w); run(); } }, 80);
+            setTimeout(() => { clearInterval(w); run(); }, 2000);
+        } else { run(); }
+    } else {
+        window.dispatchEvent(new Event('resize'));
     }
-
-    const n = 50;
-    const xArr = [];
-    const yArr = [];
-    const zMatrix = [];
-
-    const step = (2 * range) / (n - 1);
-
-    for (let i = 0; i < n; i++) {
-        const x = -range + i * step;
-        xArr.push(x);
-    }
-    for (let j = 0; j < n; j++) {
-        const y = -range + j * step;
-        yArr.push(y);
-    }
-
-    for (let j = 0; j < n; j++) {
-        const row = [];
-        for (let i = 0; i < n; i++) {
-            let z = 0;
-            try {
-                z = f(xArr[i], yArr[j]);
-            } catch(e) { z = null; }
-            row.push(z);
-        }
-        zMatrix.push(row);
-    }
-
-    const layout = {
-        paper_bgcolor: 'rgba(0,0,0,0)',
-        plot_bgcolor: 'rgba(0,0,0,0)',
-        margin: { l:0, r:0, t:0, b:0 },
-        scene: {
-            xaxis: { title: 'X', gridcolor: PALETTE.bgGrid },
-            yaxis: { title: 'Y', gridcolor: PALETTE.bgGrid },
-            zaxis: { title: 'Z', gridcolor: PALETTE.bgGrid },
-            camera: { eye: { x: 1.5, y: 1.5, z: 1.2 } }
-        }
-    };
-
-    const data = [{
-        z: zMatrix,
-        x: xArr,
-        y: yArr,
-        type: 'surface',
-        colorscale: COSMIC_COLORSCALE,
-        showscale: false
-    }];
-
-    Plotly.react('plot', data, layout, { displayModeBar: false });
 }
 
-btnPlot.addEventListener('click', plotSurface);
-
-// Initial
-plotSurface();
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => activate(t.dataset.tab)));
+activate('surface');
