@@ -1,0 +1,92 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - link "← TOOLBOX" [ref=e3] [cursor=pointer]:
+      - /url: ../../index.html
+      - generic [ref=e4]: ←
+      - generic [ref=e5]: TOOLBOX
+    - generic [ref=e7]:
+      - generic [ref=e8]: ⟲
+      - generic [ref=e9]: Servo Lab
+      - generic [ref=e10]: PID · Lieu des racines · Bode
+    - button "🌌 Cosmic" [ref=e11] [cursor=pointer]:
+      - generic [ref=e12]: 🌌
+      - generic [ref=e13]: Cosmic
+  - generic [ref=e14]:
+    - button "⟲ PID" [ref=e15] [cursor=pointer]
+    - button "📍 Lieu des racines" [ref=e16] [cursor=pointer]
+    - button "📈 Bode & Stabilité" [ref=e17] [cursor=pointer]
+  - generic [ref=e18]:
+    - generic [ref=e19]:
+      - heading "⟲ Servo Lab (PID)" [level=2] [ref=e20]
+      - paragraph [ref=e21]: "Contrôle PID d'un procédé du 2nd ordre : G(s) = K·ω₀² / (s² + 2ζω₀s + ω₀²)"
+      - generic [ref=e22]: Procédé
+      - generic [ref=e23]:
+        - generic [ref=e24]: "Gain K: 1"
+        - slider [ref=e25]: "1"
+      - generic [ref=e26]:
+        - generic [ref=e27]: "Pulsation ω₀: 1"
+        - slider [ref=e28]: "1"
+      - generic [ref=e29]:
+        - generic [ref=e30]: "Amortissement ζ: 0.5"
+        - slider [ref=e31]: "0.5"
+      - generic [ref=e32]: Contrôleur PID
+      - generic [ref=e33]:
+        - generic [ref=e34]: "Proportionnel Kp: 2"
+        - slider [ref=e35]: "2"
+      - generic [ref=e36]:
+        - generic [ref=e37]: "Intégral Ki: 0.5"
+        - slider [ref=e38]: "0.5"
+      - generic [ref=e39]:
+        - generic [ref=e40]: "Dérivé Kd: 0.5"
+        - slider [ref=e41]: "0.5"
+      - generic [ref=e42]:
+        - generic [ref=e43]: Dépassement = 0.0 %
+        - generic [ref=e44]: Temps de réponse (±5%) ≈ 9.80 s
+        - generic [ref=e45]: Erreur statique ≈ 0.020
+    - generic [ref=e50]:
+      - img:
+        - generic:
+          - generic:
+            - generic:
+              - generic:
+                - generic: "0"
+              - generic:
+                - generic: "2"
+              - generic:
+                - generic: "4"
+              - generic:
+                - generic: "6"
+              - generic:
+                - generic: "8"
+              - generic:
+                - generic: "10"
+              - generic:
+                - generic: "12"
+              - generic:
+                - generic: "14"
+            - generic:
+              - generic:
+                - generic: "0"
+              - generic:
+                - generic: "0.2"
+              - generic:
+                - generic: "0.4"
+              - generic:
+                - generic: "0.6"
+              - generic:
+                - generic: "0.8"
+              - generic:
+                - generic: "1"
+      - img:
+        - generic:
+          - generic [ref=e67]:
+            - generic [ref=e69]: Consigne
+            - generic [ref=e72]: y(t)
+          - generic:
+            - generic: Réponse indicielle en boucle fermée
+          - generic:
+            - generic: Temps (s)
+          - generic:
+            - generic: Sortie y(t)
+      - img
+  - img [ref=e74]

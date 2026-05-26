@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEII Visual Toolbox - Knowledge Base</title>
+    <link rel="stylesheet" href="../shared/css/theme.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--bg-color, #1a1b26);
+            color: var(--text-color, #c0caf5);
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #sidebar {
+            width: 300px;
+            background-color: var(--bg-dark, #16161e);
+            border-right: 1px solid var(--border-color, #292e42);
+            padding: 20px;
+            overflow-y: auto;
+        }
+        #content-area {
+            flex-grow: 1;
+            padding: 40px;
+            overflow-y: auto;
+            background-color: var(--bg-color, #1a1b26);
+        }
+        h1, h2, h3 { color: var(--heading-color, #7aa2f7); }
+        .kb-link {
+            display: block;
+            margin: 5px 0;
+            color: var(--link-color, #7dcfff);
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .kb-link:hover { text-decoration: underline; }
+        .category {
+            margin-top: 20px;
+            font-weight: bold;
+            color: var(--accent-color, #bb9af7);
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div id="sidebar">
+        <h2>Knowledge Base</h2>
+        <a href="../index.html" class="kb-link" style="color: #f7768e;">← Back to Galaxy</a>
+        
+        <div class="category">SOPs (Internal)</div>
+        <div id="sop-list">
+            <!-- Dynamically populated -->
+        </div>
+
+        <div class="category">KBAs (How-Tos)</div>
+        <div id="kba-list">
+            <!-- Dynamically populated -->
+        </div>
+    </div>
+    <div id="content-area">
+        <h1>Welcome to the Knowledge Base</h1>
+        <p>Select an article from the sidebar to read it.</p>
+        <div id="markdown-viewer"></div>
+    </div>
+
+    <script>
+        const sops = [
+            'SOP_global_v1.0.md',
+            'SOP_automatique_v1.0.md',
+            'SOP_circuits_v1.0.md',
+            'SOP_maths_v1.0.md',
+            'SOP_numerique_v1.0.md',
+            'SOP_signal-observatory_v1.0.md'
+        ];
+
+        const kbas = [
+            'KB01050001_automatique_overview_v1.0.md',
+            'KB02050001_circuits_schematic-editor_v1.0.md',
+            'KB03050001_maths_calculator_v1.0.md',
+            'KB04050001_numerique_logic-gates_v1.0.md',
+            'KB05050001_signal-observatory_sine-wave_v1.0.md'
+        ];
+
+        function loadMarkdown(path) {
+            fetch(path)
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.text();
+                })
+                .then(text => {
+                    document.getElementById('markdown-viewer').innerHTML = marked.parse(text);
+                    document.querySelector('#content-area > h1').style.display = 'none';
+                    document.querySelector('#content-area > p').style.display = 'none';
+                })
+                .catch(error => {
+                    document.getElementById('markdown-viewer').innerHTML = '<p style="color: red;">Error loading article.</p>';
+                });
+        }
+
+        const sopList = document.getElementById('sop-list');
+        sops.forEach(file => {
+            const a = document.createElement('a');
+            a.className = 'kb-link';
+            a.textContent = file.replace('.md', '').replace(/_/g, ' ');
+            a.onclick = () => loadMarkdown('sops/' + file);
+            sopList.appendChild(a);
+        });
+
+        const kbaList = document.getElementById('kba-list');
+        kbas.forEach(file => {
+            const a = document.createElement('a');
+            a.className = 'kb-link';
+            a.textContent = file.replace('.md', '').replace(/_/g, ' ');
+            a.onclick = () => loadMarkdown('kbas/' + file);
+            kbaList.appendChild(a);
+        });
+    </script>
+</body>
+</html>
