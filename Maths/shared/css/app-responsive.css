@@ -1,0 +1,68 @@
+/* ═══════════════════════════════════════════════════════════════════
+ *  APP-RESPONSIVE — shared mobile/readability layer for the Tier-4 apps
+ * ═══════════════════════════════════════════════════════════════════
+ *  The per-app inline <style> blocks live in <head> AFTER the stylesheet
+ *  <link>s, so they win on source order. This override layer therefore
+ *  uses !important inside @media — the conventional tool for a responsive
+ *  layer that must defeat desktop-first inline rules. Outside the media
+ *  query we only touch readability tokens that no app overrides.
+ *
+ *  Scope: circuits / automatique / maths use `.dashboard{display:flex}`
+ *  inside `body{overflow:hidden;height:100vh}`. On a phone that traps the
+ *  plot in a ~40px sliver next to the 300px control rail. numerique's
+ *  `.dashboard` is a centered block (already scroll-friendly), so the
+ *  rules below are written to be no-ops there.
+ * ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Readability: the hint/instruction text was --text-dim (#4a5680),
+   ~2.9:1 contrast — below WCAG AA (4.5:1). Lift to --text-mid (#8899c8,
+   ~7.4:1) and off the sub-10px floor so the first thing a student reads
+   on every app is actually legible. Applies at all widths. ── */
+.hint {
+    /* !important: each app's inline <style> defines `.hint` at equal
+       specificity but later source order, so it wins a plain tie. */
+    color: var(--text-mid) !important;
+    font-size: 0.8rem !important;
+    line-height: 1.45;
+}
+
+/* ── Mobile / narrow tablet: stack controls above the visualisation and
+   let the page scroll instead of locking to one viewport height. ── */
+@media (max-width: 720px) {
+    /* Release the single-screen lock so stacked content can scroll. */
+    body {
+        overflow-y: auto !important;
+        height: auto !important;
+        min-height: 100vh;
+    }
+
+    /* Flex-row dashboards become a single column. (no-op for numerique,
+       whose .dashboard is not display:flex) */
+    .dashboard {
+        flex-direction: column !important;
+        height: auto !important;
+        padding: 0.75rem !important;
+        gap: 0.75rem !important;
+    }
+
+    /* Control rail spans the width instead of a fixed 280–300px column. */
+    .controls {
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box;
+    }
+
+    /* The visualisation needs a real height once it's no longer sharing a
+       row — without this the flex child collapses on auto-height bodies. */
+    .stage,
+    .plot-container,
+    .schematic {
+        width: 100% !important;
+        min-height: 320px;
+    }
+
+    /* Tabs wrap rather than overflow off-screen on a phone. */
+    .tabbar {
+        flex-wrap: wrap;
+    }
+}
