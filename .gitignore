@@ -1,0 +1,18 @@
+# Playwright MCP debug artifacts — console logs + page snapshots dumped during
+# in-browser QA. These got committed and uncommitted across several auto-commits;
+# they are scratch output, never source.
+.playwright-mcp/
+
+# Audit / debug screenshots taken during design + QA passes (root-level PNGs).
+/*.png
+audit-*.png
+
+# Dependencies
+node_modules/
+
+# Scheduled-task / session lock files written by local automation
+.claude/scheduled_tasks.lock
+
+# OS noise
+.DS_Store
+Thumbs.db
