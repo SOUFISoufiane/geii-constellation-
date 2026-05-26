@@ -70,6 +70,8 @@
         <button class="tab active" data-tab="arm2r">🦾 Bras 2R</button>
         <button class="tab" data-tab="rotation">🔄 Rotations</button>
         <button class="tab" data-tab="homogeneous">📐 Transf. homogènes</button>
+        <button class="tab" data-tab="frames">🌐 Repères & points</button>
+        <button class="tab" data-tab="arm6r">🦿 Bras 6 axes</button>
     </div>
 
     <!-- ═══════════════ BRAS 2R MODULE ═══════════════ -->
@@ -179,6 +181,68 @@
             <div class="readout" id="hom-readout"></div>
         </div>
         <div class="stage"><div class="plot-container"><div id="plot-hom" style="width:100%;height:100%;"></div></div></div>
+    </div>
+
+    <!-- ═══════════════ REPÈRES & POINTS MODULE ═══════════════ -->
+    <div class="dashboard module" id="mod-frames">
+        <div class="controls">
+            <h2 class="panel-title">🌐 Repères & points</h2>
+            <p class="hint">Repère World + un repère REF1 (position + orientation). On apprend un point dans REF1 → ses coordonnées World (ᵂp = T·ᴿp), avec un point d'approche décalé selon l'axe z de REF1 (idée « appro » du TP Stäubli).</p>
+
+            <div class="section-title">Orientation de REF1</div>
+            <div class="seg" id="fr-axis">
+                <button data-axis="x">Rx</button>
+                <button data-axis="y">Ry</button>
+                <button data-axis="z" class="active">Rz</button>
+            </div>
+            <div class="control-group"><label>θ (°): <span class="val" id="val-fr-ang">30</span></label>
+                <input type="range" id="fr-ang" min="-180" max="180" step="1" value="30"></div>
+
+            <div class="section-title">Position de REF1 (World)</div>
+            <div class="control-group"><label>x: <span class="val" id="val-fr-rx">1.5</span></label>
+                <input type="range" id="fr-rx" min="-3" max="3" step="0.1" value="1.5"></div>
+            <div class="control-group"><label>y: <span class="val" id="val-fr-ry">1</span></label>
+                <input type="range" id="fr-ry" min="-3" max="3" step="0.1" value="1"></div>
+            <div class="control-group"><label>z: <span class="val" id="val-fr-rz">0.5</span></label>
+                <input type="range" id="fr-rz" min="-3" max="3" step="0.1" value="0.5"></div>
+
+            <div class="section-title">Point P (coords dans REF1)</div>
+            <div class="control-group" style="flex-direction:row; gap:6px; align-items:center">
+                <input class="numinput" id="fr-px" type="number" value="1" step="0.25" title="x_REF">
+                <input class="numinput" id="fr-py" type="number" value="0.5" step="0.25" title="y_REF">
+                <input class="numinput" id="fr-pz" type="number" value="0" step="0.25" title="z_REF">
+            </div>
+            <div class="control-group"><label>Décalage d'approche (axe z REF1): <span class="val" id="val-fr-off">0.8</span></label>
+                <input type="range" id="fr-off" min="0" max="2" step="0.1" value="0.8"></div>
+
+            <div class="readout" id="fr-readout"></div>
+        </div>
+        <div class="stage"><div class="plot-container"><div id="plot-fr" style="width:100%;height:100%;"></div></div></div>
+    </div>
+
+    <!-- ═══════════════ BRAS 6 AXES MODULE ═══════════════ -->
+    <div class="dashboard module" id="mod-arm6r">
+        <div class="controls">
+            <h2 class="panel-title">🦿 Bras 6 axes</h2>
+            <p class="hint">Robot sériel 6R (type Stäubli TX) modélisé par paramètres de Denavit–Hartenberg. Bouger les axes ; le poignet sphérique (axes 4-5-6) révèle les singularités (TP Stäubli §VIII).</p>
+
+            <div class="section-title">Axes articulaires (°)</div>
+            <div class="control-group"><label>q₁ (base): <span class="val" id="val-q1">0</span></label>
+                <input type="range" id="q1" min="-180" max="180" step="1" value="0"></div>
+            <div class="control-group"><label>q₂ (épaule): <span class="val" id="val-q2">30</span></label>
+                <input type="range" id="q2" min="-180" max="180" step="1" value="30"></div>
+            <div class="control-group"><label>q₃ (coude): <span class="val" id="val-q3">60</span></label>
+                <input type="range" id="q3" min="-180" max="180" step="1" value="60"></div>
+            <div class="control-group"><label>q₄ (poignet 1): <span class="val" id="val-q4">0</span></label>
+                <input type="range" id="q4" min="-180" max="180" step="1" value="0"></div>
+            <div class="control-group"><label>q₅ (poignet 2): <span class="val" id="val-q5">45</span></label>
+                <input type="range" id="q5" min="-180" max="180" step="1" value="45"></div>
+            <div class="control-group"><label>q₆ (poignet 3): <span class="val" id="val-q6">0</span></label>
+                <input type="range" id="q6" min="-180" max="180" step="1" value="0"></div>
+
+            <div class="readout" id="arm6-readout"></div>
+        </div>
+        <div class="stage"><div class="plot-container"><div id="plot-arm6" style="width:100%;height:100%;"></div></div></div>
     </div>
 
     <script type="module" src="./js/main.js"></script>

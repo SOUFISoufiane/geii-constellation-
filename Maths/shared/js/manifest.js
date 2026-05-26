@@ -133,13 +133,13 @@ export const APPS = {
     },
     'robotique': {
         name: 'Robotique',
-        tagline: 'Bras 2R · Rotations · Transf. homogènes',
+        tagline: 'Bras 2R/6R · Rotations · Repères',
         icon: '🦾',
         status: 'stable',
         concept: 'robotics',
         matieres: ['Robotique industrielle'],
         path: 'apps/robotique/index.html',
-        description: 'Cinématique du bras planaire 2R (MGD/MGI), matrices de rotation élémentaires Rx/Ry/Rz et leur composition, transformations homogènes T avec application à un point et inverse.'
+        description: 'Cinématique 2R (MGD/MGI), rotations Rx/Ry/Rz et composition, transformations homogènes, repères & points d\'approche (style TP Stäubli), et bras 6 axes (DH) avec détection de singularités.'
     }
 };
 

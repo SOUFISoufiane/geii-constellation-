@@ -4,8 +4,10 @@
 import { initArm2R } from './modules/arm2r.js';
 import { initRotation } from './modules/rotation.js';
 import { initHomogeneous } from './modules/homogeneous.js';
+import { initFrames } from './modules/frames.js';
+import { initArm6R } from './modules/arm6r.js';
 
-const INIT = { arm2r: initArm2R, rotation: initRotation, homogeneous: initHomogeneous };
+const INIT = { arm2r: initArm2R, rotation: initRotation, homogeneous: initHomogeneous, frames: initFrames, arm6r: initArm6R };
 const NEEDS_KATEX = new Set(['rotation', 'homogeneous']);
 const started = new Set();
 
