@@ -115,13 +115,3 @@ export function initTooltips() {
     // Initialization is handled by top-level event listeners above.
     // Export provided to satisfy main.js boot sequence.
 }
-
-export function initTooltips() {
-    // Initialization is handled by top-level event listeners above.
-    // Export provided to satisfy main.js boot sequence.
-}
-
-export function initTooltips() {
-    // Initialization is handled by top-level event listeners above.
-    // Export provided to satisfy main.js boot sequence.
-}
