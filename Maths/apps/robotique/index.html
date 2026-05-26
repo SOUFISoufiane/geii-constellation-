@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robotique — GEII Visual Toolbox</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🦾</text></svg>">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <link rel="stylesheet" href="../../shared/css/theme.css">
+    <link rel="stylesheet" href="../../shared/css/toolbox.css">
+    <link rel="stylesheet" href="../../shared/css/app-responsive.css">
+    <style>
+        body { padding-top: 50px; display: flex; flex-direction: column; overflow: hidden; height: 100vh; }
+        .hud-scanlines, .vignette { position: fixed; inset: 0; pointer-events: none; }
+
+        .tabbar { display: flex; gap: 4px; padding: 0.5rem 1rem 0; position: relative; z-index: 10; }
+        .tab { background: rgba(0,0,0,0.4); border: 1px solid var(--rim); border-bottom: none;
+               color: var(--text-mid); padding: 8px 18px; border-radius: 8px 8px 0 0; cursor: pointer;
+               font-family: 'Space Mono', monospace; font-size: 0.85rem; transition: all .15s; }
+        .tab:hover { color: var(--text-bright); }
+        .tab.active { background: rgba(0,0,0,0.6); color: var(--accent-cyan); border-color: var(--accent-cyan); }
+
+        .dashboard { display: flex; flex: 1; min-height: 0; padding: 1rem; gap: 1rem; position: relative; z-index: 10; }
+        .controls { width: 320px; background: rgba(0,0,0,0.5); border: 1px solid var(--rim); padding: 1rem;
+                    border-radius: 8px; display: flex; flex-direction: column; gap: 0.5rem; overflow-y: auto; }
+        .stage { flex: 1; display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+        .plot-container { flex: 1; background: rgba(0,0,0,0.5); border: 1px solid var(--rim);
+                          border-radius: 8px; overflow: hidden; min-height: 0; }
+        .control-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 6px; }
+        .control-group label { color: var(--text-mid); font-size: 0.8rem; font-family: 'Space Mono', monospace; }
+        .control-group input[type="range"] { accent-color: var(--accent-cyan); }
+        .control-group span.val { color: var(--accent-cyan); font-weight: bold; }
+        .section-title { margin: 0.5rem 0 0; color: var(--accent-cyan); font-size: 0.95rem;
+                         border-bottom: 1px solid var(--rim); padding-bottom: 4px; }
+        .readout { font-family: 'Space Mono', monospace; font-size: 0.8rem; color: var(--text-bright);
+                   border-top: 1px solid var(--rim); padding-top: 0.75rem; margin-top: auto; }
+        .readout div { margin: 2px 0; }
+        h2.panel-title { margin: 0; color: var(--accent-cyan); font-size: 1.1rem; }
+        .hint { color: var(--text-dim); font-size: 0.75rem; }
+        .module { display: none; flex: 1; min-height: 0; }
+        .module.active { display: flex; }
+
+        /* segmented toggle (FK / IK, rotation axis) */
+        .seg { display: flex; gap: 0; border: 1px solid var(--rim); border-radius: 6px; overflow: hidden; }
+        .seg button { flex: 1; background: rgba(0,0,0,0.3); border: none; color: var(--text-mid);
+                      padding: 6px 4px; cursor: pointer; font-family: 'Space Mono', monospace; font-size: 0.78rem; }
+        .seg button.active { background: rgba(0,245,212,0.18); color: var(--accent-cyan); }
+
+        /* matrix readout (rotations / homogeneous transforms) */
+        .matbox { background: rgba(0,0,0,0.35); border: 1px solid var(--rim); border-radius: 8px;
+                  padding: 10px; text-align: center; color: var(--text-bright); overflow-x: auto; }
+        .matbox .ttl { color: var(--accent-cyan); font-family: 'Space Mono', monospace;
+                       font-size: 0.8rem; margin-bottom: 6px; }
+        .numinput { background: rgba(0,0,0,0.3); border: 1px solid var(--rim); color: var(--text-bright);
+                    padding: 4px 6px; border-radius: 4px; font-family: 'Space Mono', monospace; width: 100%; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+    <div class="hud-scanlines"></div>
+    <div class="vignette"></div>
+
+    <script type="module">
+        const { mountAppHeader } = await import(`../../shared/js/app-header.js?v=${Date.now()}`);
+        mountAppHeader('robotique');
+    </script>
+
+    <div class="tabbar">
+        <button class="tab active" data-tab="arm2r">🦾 Bras 2R</button>
+        <button class="tab" data-tab="rotation">🔄 Rotations</button>
+        <button class="tab" data-tab="homogeneous">📐 Transf. homogènes</button>
+    </div>
+
+    <!-- ═══════════════ BRAS 2R MODULE ═══════════════ -->
+    <div class="dashboard module active" id="mod-arm2r">
+        <div class="controls">
+            <h2 class="panel-title">🦾 Bras planaire 2R</h2>
+            <p class="hint">Robot 2R, longueurs L₁ et L₂. MGD : x = L₁cos θ₁ + L₂cos(θ₁+θ₂), y = L₁sin θ₁ + L₂sin(θ₁+θ₂). (TD1, Ex. 7 : L₁=2, L₂=1)</p>
+
+            <div class="section-title">Mode</div>
+            <div class="seg" id="arm-mode">
+                <button data-mode="fk" class="active">MGD (θ → position)</button>
+                <button data-mode="ik">MGI (cible → θ)</button>
+            </div>
+
+            <div class="section-title">Longueurs des segments</div>
+            <div class="control-group"><label>L₁: <span class="val" id="val-l1">2</span></label>
+                <input type="range" id="arm-l1" min="0.5" max="3" step="0.1" value="2"></div>
+            <div class="control-group"><label>L₂: <span class="val" id="val-l2">1</span></label>
+                <input type="range" id="arm-l2" min="0.5" max="3" step="0.1" value="1"></div>
+
+            <!-- FK controls -->
+            <div id="fk-controls">
+                <div class="section-title">Angles articulaires</div>
+                <div class="control-group"><label>θ₁ (°): <span class="val" id="val-t1">30</span></label>
+                    <input type="range" id="arm-t1" min="-180" max="180" step="1" value="30"></div>
+                <div class="control-group"><label>θ₂ (°): <span class="val" id="val-t2">45</span></label>
+                    <input type="range" id="arm-t2" min="-180" max="180" step="1" value="45"></div>
+            </div>
+
+            <!-- IK controls -->
+            <div id="ik-controls" style="display:none">
+                <div class="section-title">Cible de l'effecteur</div>
+                <div class="control-group"><label>x cible: <span class="val" id="val-tx">2.5</span></label>
+                    <input type="range" id="arm-tx" min="-4" max="4" step="0.05" value="2.5"></div>
+                <div class="control-group"><label>y cible: <span class="val" id="val-ty">1.0</span></label>
+                    <input type="range" id="arm-ty" min="-4" max="4" step="0.05" value="1.0"></div>
+                <p class="hint" style="margin-top:4px">Deux solutions « coude haut / coude bas » quand la cible est atteignable.</p>
+            </div>
+
+            <div class="readout" id="arm-readout"></div>
+        </div>
+        <div class="stage"><div class="plot-container"><div id="plot-arm" style="width:100%;height:100%;"></div></div></div>
+    </div>
+
+    <!-- ═══════════════ ROTATIONS MODULE ═══════════════ -->
+    <div class="dashboard module" id="mod-rotation">
+        <div class="controls">
+            <h2 class="panel-title">🔄 Matrices de rotation</h2>
+            <p class="hint">Rotations élémentaires Rx(θ), Ry(θ), Rz(θ) autour des axes du repère (TD2, §1.3). On peut composer R = R_A · R_B.</p>
+
+            <div class="section-title">Rotation A</div>
+            <div class="seg" id="rotA-axis">
+                <button data-axis="x" class="active">Rx</button>
+                <button data-axis="y">Ry</button>
+                <button data-axis="z">Rz</button>
+            </div>
+            <div class="control-group"><label>θ_A (°): <span class="val" id="val-rotA">45</span></label>
+                <input type="range" id="rotA-ang" min="-180" max="180" step="1" value="45"></div>
+
+            <div class="section-title">Rotation B (composée : R = R_A · R_B)</div>
+            <div class="seg" id="rotB-axis">
+                <button data-axis="none" class="active">aucune</button>
+                <button data-axis="x">Rx</button>
+                <button data-axis="y">Ry</button>
+                <button data-axis="z">Rz</button>
+            </div>
+            <div class="control-group"><label>θ_B (°): <span class="val" id="val-rotB">0</span></label>
+                <input type="range" id="rotB-ang" min="-180" max="180" step="1" value="0"></div>
+
+            <div class="matbox" style="margin-top:0.75rem"><div class="ttl">Matrice R (3×3)</div><div id="rot-matrix"></div></div>
+            <div class="readout" id="rot-readout"></div>
+        </div>
+        <div class="stage"><div class="plot-container"><div id="plot-rot" style="width:100%;height:100%;"></div></div></div>
+    </div>
+
+    <!-- ═══════════════ TRANSFORMATIONS HOMOGÈNES MODULE ═══════════════ -->
+    <div class="dashboard module" id="mod-homogeneous">
+        <div class="controls">
+            <h2 class="panel-title">📐 Transformations homogènes</h2>
+            <p class="hint">T = [ R | p ; 0 0 0 1 ]. Rotation autour d'un axe + translation. On applique T à un point et on calcule T⁻¹ (TD2, Ex. 5-8).</p>
+
+            <div class="section-title">Rotation</div>
+            <div class="seg" id="hom-axis">
+                <button data-axis="x">Rx</button>
+                <button data-axis="y">Ry</button>
+                <button data-axis="z" class="active">Rz</button>
+            </div>
+            <div class="control-group"><label>θ (°): <span class="val" id="val-hom-ang">90</span></label>
+                <input type="range" id="hom-ang" min="-180" max="180" step="1" value="90"></div>
+
+            <div class="section-title">Translation p</div>
+            <div class="control-group"><label>pₓ: <span class="val" id="val-px">2</span></label>
+                <input type="range" id="hom-px" min="-3" max="3" step="0.1" value="2"></div>
+            <div class="control-group"><label>p_y: <span class="val" id="val-py">1</span></label>
+                <input type="range" id="hom-py" min="-3" max="3" step="0.1" value="1"></div>
+            <div class="control-group"><label>p_z: <span class="val" id="val-pz">0</span></label>
+                <input type="range" id="hom-pz" min="-3" max="3" step="0.1" value="0"></div>
+
+            <div class="section-title">Point à transformer (repère B)</div>
+            <div class="control-group" style="flex-direction:row; gap:6px; align-items:center">
+                <input class="numinput" id="hom-qx" type="number" value="1" step="0.5" title="x">
+                <input class="numinput" id="hom-qy" type="number" value="0" step="0.5" title="y">
+                <input class="numinput" id="hom-qz" type="number" value="0" step="0.5" title="z">
+            </div>
+
+            <div class="matbox" style="margin-top:0.75rem"><div class="ttl">Matrice T (4×4)</div><div id="hom-matrix"></div></div>
+            <div class="readout" id="hom-readout"></div>
+        </div>
+        <div class="stage"><div class="plot-container"><div id="plot-hom" style="width:100%;height:100%;"></div></div></div>
+    </div>
+
+    <script type="module" src="./js/main.js"></script>
+</body>
+</html>

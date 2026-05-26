@@ -66,6 +66,16 @@ export const CONCEPTS = [
         matieres: ['Maths'],
         apps: ['maths'],
         position: { x: 0.50, y: 0.48 }
+    },
+    {
+        id: 'robotics',
+        name: 'Robotique',
+        icon: '🦾',
+        color: 'var(--accent-cyan)',
+        description: 'Cinématique, repères, rotations, transformations homogènes',
+        matieres: ['Robotique industrielle', 'Maths'],
+        apps: ['robotique'],
+        position: { x: 0.50, y: 0.15 }
     }
 ];
 
@@ -120,6 +130,16 @@ export const APPS = {
         matieres: ['Maths S3-S6'],
         path: 'apps/maths/index.html',
         description: 'Traceur de surfaces 3D, résolveur d\'EDO du 2nd ordre par RK4, et transformée de Laplace pas-à-pas avec carte pôles-zéros.'
+    },
+    'robotique': {
+        name: 'Robotique',
+        tagline: 'Bras 2R · Rotations · Transf. homogènes',
+        icon: '🦾',
+        status: 'stable',
+        concept: 'robotics',
+        matieres: ['Robotique industrielle'],
+        path: 'apps/robotique/index.html',
+        description: 'Cinématique du bras planaire 2R (MGD/MGI), matrices de rotation élémentaires Rx/Ry/Rz et leur composition, transformations homogènes T avec application à un point et inverse.'
     }
 };
 
