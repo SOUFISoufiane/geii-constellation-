@@ -9,17 +9,40 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <style>
-        body { padding-top: 50px; display: flex; flex-direction: column; overflow: auto; }
+        body { padding-top: 50px; display: flex; flex-direction: column; overflow: auto; min-height: 100vh; }
         .hud-scanlines, .vignette { position: fixed; inset: 0; pointer-events: none; }
-        .dashboard { padding: 2rem; position: relative; z-index: 10; max-width: 800px; margin: 0 auto; width: 100%; }
-        h1 { color: var(--accent-green); }
+
+        .tabbar { display: flex; gap: 4px; padding: 0.5rem 1rem 0; position: relative; z-index: 10; max-width: 860px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+        .tab { background: rgba(0,0,0,0.4); border: 1px solid var(--rim); border-bottom: none;
+               color: var(--text-mid); padding: 8px 18px; border-radius: 8px 8px 0 0; cursor: pointer;
+               font-family: 'Space Mono', monospace; font-size: 0.85rem; }
+        .tab.active { background: rgba(0,0,0,0.6); color: var(--accent-green); border-color: var(--accent-green); }
+
+        .dashboard { padding: 1.5rem 2rem; position: relative; z-index: 10; max-width: 860px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+        h1 { color: var(--accent-green); margin-top: 0; }
         .truth-table { width: 100%; border-collapse: collapse; margin-top: 1rem; background: rgba(0,0,0,0.4); border: 1px solid var(--rim); }
         .truth-table th, .truth-table td { padding: 8px; border: 1px solid var(--rim); text-align: center; font-family: 'Space Mono', monospace; }
         .truth-table th { background: rgba(255,255,255,0.05); color: var(--text-mid); }
         .out-btn { background: transparent; border: 1px solid var(--accent-green); color: var(--accent-green); padding: 4px 16px; cursor: pointer; border-radius: 4px; font-family: 'Space Mono', monospace; font-weight: bold; width: 60px; }
         .out-btn.on { background: rgba(6, 255, 165, 0.2); }
-        .equation-box { margin-top: 2rem; padding: 1rem; border: 1px solid var(--accent-purple); border-radius: 8px; background: rgba(0,0,0,0.5); }
+        .equation-box { margin-top: 1.5rem; padding: 1rem; border: 1px solid var(--accent-purple); border-radius: 8px; background: rgba(0,0,0,0.5); }
         select { background: transparent; border: 1px solid var(--rim); color: var(--text-bright); padding: 4px; border-radius: 4px; font-family: 'Space Mono', monospace; }
+        .module { display: none; } .module.active { display: block; }
+
+        /* Karnaugh */
+        .kmap { border-collapse: collapse; margin: 1rem auto; font-family: 'Space Mono', monospace; }
+        .kmap th, .kmap td { border: 1px solid var(--rim); width: 54px; height: 48px; text-align: center; color: var(--text-bright); }
+        .kmap th { color: var(--text-dim); background: rgba(255,255,255,0.04); font-size: 0.8rem; }
+        .kmap td.one { background: rgba(6,255,165,0.18); color: var(--accent-green); font-weight: bold; }
+        .kmap td.zero { color: var(--text-dim); }
+        .corner { color: var(--accent-green) !important; font-size: 0.7rem; }
+
+        /* VHDL */
+        pre.vhdl { background: #05050f; border: 1px solid var(--rim); border-radius: 8px; padding: 1rem;
+                   color: var(--text-bright); font-family: 'Space Mono', monospace; font-size: 0.82rem;
+                   overflow-x: auto; white-space: pre; }
+        .copy-btn { background: transparent; border: 1px solid var(--accent-green); color: var(--accent-green);
+                    padding: 4px 12px; border-radius: 4px; cursor: pointer; font-family: 'Space Mono', monospace; margin-bottom: 8px; }
     </style>
 </head>
 <body>
@@ -31,26 +54,44 @@
         mountAppHeader('numerique');
     </script>
 
-    <div class="dashboard">
+    <div class="tabbar">
+        <button class="tab active" data-tab="truth">📋 Table de vérité</button>
+        <button class="tab" data-tab="karnaugh">🗺️ Karnaugh</button>
+        <button class="tab" data-tab="vhdl">⌨ VHDL</button>
+    </div>
+
+    <!-- Truth table is the shared input; the others derive from it. -->
+    <div class="dashboard module active" id="mod-truth">
         <h1>01 Digital Lab</h1>
-        <p style="color:var(--text-dim)">Éditeur de Table de Vérité interactif. Cliquez sur les sorties (S) pour basculer leur état (0/1).</p>
-        
+        <p style="color:var(--text-dim)">Éditeur de table de vérité. Cliquez sur les sorties (S) pour basculer 0/1. Les onglets Karnaugh et VHDL dérivent de cette table.</p>
         <label style="color:var(--text-mid); margin-right:8px;">Nombre d'entrées :</label>
         <select id="var-count">
             <option value="2">2 (A, B)</option>
             <option value="3" selected>3 (A, B, C)</option>
             <option value="4">4 (A, B, C, D)</option>
         </select>
-
-        <table class="truth-table" id="tt">
-            <thead id="tt-head"></thead>
-            <tbody id="tt-body"></tbody>
-        </table>
-
+        <table class="truth-table" id="tt"><thead id="tt-head"></thead><tbody id="tt-body"></tbody></table>
         <div class="equation-box">
-            <h3 style="margin-top:0; color:var(--accent-purple);">Équation Canonique (Somme des Produits)</h3>
+            <h3 style="margin-top:0; color:var(--accent-purple);">Équation canonique (Somme des produits)</h3>
             <div id="equation-out" style="font-size: 1.2rem; text-align: center; margin-top: 1rem; color: var(--text-bright);"></div>
         </div>
+    </div>
+
+    <div class="dashboard module" id="mod-karnaugh">
+        <h1>🗺️ Tableau de Karnaugh</h1>
+        <p style="color:var(--text-dim)">Minimisation par Quine–McCluskey. Les cellules à 1 sont regroupées en impliquants premiers.</p>
+        <div id="kmap-host" style="overflow-x:auto;"></div>
+        <div class="equation-box">
+            <h3 style="margin-top:0; color:var(--accent-green);">Forme minimale (SOP)</h3>
+            <div id="kmap-eq" style="font-size: 1.2rem; text-align: center; margin-top: 1rem; color: var(--text-bright);"></div>
+        </div>
+    </div>
+
+    <div class="dashboard module" id="mod-vhdl">
+        <h1>⌨ Génération VHDL</h1>
+        <p style="color:var(--text-dim)">Entité + architecture dataflow synthétisable, dérivée de la forme minimale.</p>
+        <button class="copy-btn" id="vhdl-copy">📋 Copier</button>
+        <pre class="vhdl" id="vhdl-out"></pre>
     </div>
 
     <script type="module" src="./js/main.js"></script>
