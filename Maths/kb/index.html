@@ -391,6 +391,9 @@
         }
 
         // ── Auto-linker: turn app/feature mentions into teleport chips ─
+        // Each destination links at most ONCE PER SECTION (reset at every <h2>),
+        // so a chip is always near where you're reading without flooding the
+        // page with repeats.
         function linkify(rootEl, currentPath) {
             const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT, {
                 acceptNode(node) {
@@ -406,17 +409,33 @@
             // build one regex of all aliases (escaped), longest first
             const escaped = ALIAS_MAP.map(m => m.alias.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'));
             const re = new RegExp('\\b(' + escaped.join('|') + ')\\b', 'g');
+
+            // section index of a node = number of <h2>s before it in document order
+            const h2s = [...rootEl.querySelectorAll('h2')];
+            const sectionOf = (node) => {
+                let idx = 0;
+                for (const h of h2s) {
+                    if (h.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING) idx++;
+                    else break;
+                }
+                return idx;
+            };
+
+            const linkedInSection = new Set();   // keys: "<sectionIdx>|<path>"
             targets.forEach(node => {
                 const text = node.nodeValue;
+                re.lastIndex = 0;
                 if (!re.test(text)) return;
                 re.lastIndex = 0;
+                const sec = sectionOf(node);
                 const frag = document.createDocumentFragment();
                 let last = 0, m;
-                const seen = new Set();   // link each alias at most once per text node
                 while ((m = re.exec(text)) !== null) {
                     const entry = ALIAS_MAP.find(a => a.alias === m[0]);
-                    if (!entry || entry.path === currentPath || seen.has(entry.path)) continue;
-                    seen.add(entry.path);
+                    if (!entry || entry.path === currentPath) continue;
+                    const key = sec + '|' + entry.path;
+                    if (linkedInSection.has(key)) continue;   // already linked in this section
+                    linkedInSection.add(key);
                     if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
                     const span = document.createElement('span');
                     span.className = 'xref'; span.textContent = m[0];
