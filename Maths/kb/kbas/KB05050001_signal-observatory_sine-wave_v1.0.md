@@ -10,9 +10,14 @@ Signal Observatory is the toolbox's flagship Fourier/signal-processing app: 32 s
    in the params board.
 3. Choose a **fusion mode** from the dropdown — e.g. ① Parseval (energy equivalence),
    ② Bode / Nyquist (stability), ④ STFT spectrogram, ⑥ Convolution s ∗ h, ⑦ Bode pur,
-   ⑧ Nyquist pur, ⑨ Waterfall 3D.
-4. Toggle a filter (Butterworth and others) and watch its effect across modes.
-5. Use the players to animate the winding frequency / time evolution.
+   ⑧ Nyquist pur, ⑨ Waterfall 3D, or **⑭ Audio DSP Analyzer**.
+4. **For ⑭ Audio DSP**:
+   - Drag and drop any local audio file (.wav, .mp3, .ogg, .flac) onto the screen.
+   - Use the transport controls (Play, Pause, Stop, Scrubber) to navigate the file.
+   - Adjust the FFT Size and Windowing Function in the controls board.
+   - Observe the real-time Oscilloscope, Phase, and 2D/3D Spectrograms.
+5. For other modes, toggle a filter (Butterworth and others) and watch its effect across modes.
+6. Use the players to animate the winding frequency / time evolution.
 
 ## 3. Expected Outcome
 The selected signal is shown through the chosen analytical lens (time, frequency, complex

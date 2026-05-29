@@ -5,24 +5,28 @@ To document the maintenance procedure for Signal Observatory — the toolbox's f
 Fourier/signal app (32 signals, 9 fusion modes, 8 filters).
 
 ## 2. Scope
-Applies to `Maths/apps/signal-observatory/`. Key folders under `js/`: `plots/` (fusion-modes,
-plotly-config, convolution, raw-telemetry, algebra), `math/`, `ui/`, `derivations/`, plus
-`state.js` (reactive store) and `main.js`.
+Applies to `Maths/apps/signal-observatory/`. Key folders under `js/`: 
+- `plots/` (fusion-modes, plotly-config, convolution, raw-telemetry, algebra, audio-viz)
+- `audio/` (file-audio-engine, dsp-worklet) — handles multithreaded DSP
+- `math/`, `ui/`, `derivations/`
+- `state.js` (reactive store) and `main.js`.
 
 ## 3. Prerequisites
 - Local Python dev server (`python dev_server.py 8123`).
 - This is the most mature, separately-architected app — treat it carefully. It is the
   source of the shared `plots/plotly-config.js` (`PALETTE`, `baseLayout`) that the other
   apps import.
+- When working on `js/audio/dsp-worklet.js`, beware that it runs in a separate background thread without access to DOM/Window objects.
 
 ## 4. Procedure
-1. **Fusion modes**: the 9 analytical views live in `js/plots/fusion-modes.js` (dispatcher).
-   Add a mode by extending the dropdown in `index.html` and the dispatcher.
+1. **Fusion modes**: the analytical views live in `js/plots/fusion-modes.js` (dispatcher).
+   Add a mode by extending the dropdown in `index.html` and the dispatcher. Mode 14 (Audio DSP) bypasses standard processing in favor of its own multithreaded pipeline in `main.js`.
 2. **Signals**: defined in the `math/` catalogues; derivations (formula panel) in
    `derivations/`. Keep a signal's derivation in sync with its definition.
-3. **Theme-aware colors**: never hardcode hex — read via the `PALETTE` Proxy in
+3. **Audio Engine**: uses an `AudioContext` and an `AudioWorkletNode` (`dsp-worklet.js`) to offload FFT computations via `postMessage`.
+4. **Theme-aware colors**: never hardcode hex — read via the `PALETTE` Proxy in
    `plotly-config.js` (resolves CSS vars from `document.body` so themes propagate).
-4. **State**: `state.js` is a pub/sub store; UI reads/writes through it.
+5. **State**: `state.js` is a pub/sub store; UI reads/writes through it. (Audio mode uses its own `audioAnalyzerState` in `file-audio-engine.js`).
 
 ## 5. Troubleshooting
 - **Plotly "Cannot set property color"**: a shared font/layout object was mutated — return a

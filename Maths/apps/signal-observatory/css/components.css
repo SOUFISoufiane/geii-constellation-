@@ -1526,3 +1526,205 @@ input[type=range]::-webkit-slider-runnable-track {
 .js-plotly-plot .plotly .bg,
 .js-plotly-plot .plotly .main-svg { background: transparent !important; }
 .js-plotly-plot .plotly .modebar { background: transparent !important; }
+
+/* ═══════════════════════════════════════════════════════════════════
+ *  AUDIO DSP ANALYZER — Drop overlay, transport bar, loading states
+ * ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── Drag-and-Drop Overlay ─────────────────────────────────────── */
+#audio-drop-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: 100;
+    background: rgba(5, 5, 20, 0.88);
+    backdrop-filter: blur(16px);
+    border: 2px dashed var(--accent-cyan);
+    border-radius: 12px;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    animation: drop-appear 0.2s ease-out;
+}
+
+#audio-drop-overlay.visible {
+    display: flex;
+    pointer-events: auto;
+}
+
+@keyframes drop-appear {
+    from { opacity: 0; transform: scale(0.97); }
+    to   { opacity: 1; transform: scale(1); }
+}
+
+.audio-drop-content {
+    text-align: center;
+    color: var(--text-bright);
+}
+
+.audio-drop-icon {
+    font-size: 3.5rem;
+    margin-bottom: 0.8rem;
+    animation: drop-bounce 1.2s ease-in-out infinite;
+}
+
+@keyframes drop-bounce {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-8px); }
+}
+
+.audio-drop-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    color: var(--accent-cyan);
+    text-shadow: 0 0 12px var(--accent-cyan);
+    margin-bottom: 0.4rem;
+}
+
+.audio-drop-sub {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    letter-spacing: 0.12em;
+}
+
+/* ─── Audio Transport Bar ───────────────────────────────────────── */
+#audio-transport-bar {
+    display: none;
+    padding: 0.35rem 1rem;
+    background: rgba(5, 5, 20, 0.9);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--rim);
+    border-bottom: 1px solid var(--rim);
+    flex-shrink: 0;
+    position: relative;
+}
+
+#audio-transport-bar.visible {
+    display: block;
+}
+
+/* Glowing bottom edge */
+#audio-transport-bar::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: -1px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-green), var(--accent-cyan), transparent);
+    opacity: 0.5;
+}
+
+.audio-transport-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.audio-transport-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--rim);
+    color: var(--accent-green);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.audio-transport-btn:hover {
+    background: rgba(6, 255, 165, 0.12);
+    border-color: var(--accent-green);
+    box-shadow: 0 0 10px rgba(6, 255, 165, 0.3);
+    transform: scale(1.1);
+}
+
+.audio-transport-btn:active {
+    transform: scale(0.95);
+}
+
+/* Playing state glow */
+#audio-transport-bar.playing {
+    border-color: rgba(6, 255, 165, 0.3);
+}
+
+#audio-transport-bar.playing::after {
+    opacity: 0.8;
+    animation: transport-glow 2s ease-in-out infinite;
+}
+
+@keyframes transport-glow {
+    0%, 100% { opacity: 0.5; }
+    50%      { opacity: 1; }
+}
+
+/* Scrubber styling override for the transport */
+#audio-scrubber {
+    height: 6px;
+    border-radius: 3px;
+}
+
+#audio-scrubber::-webkit-slider-thumb {
+    width: 14px;
+    height: 14px;
+    color: var(--accent-green);
+    margin-top: -4px;
+}
+
+/* ─── Loading Skeleton ──────────────────────────────────────────── */
+.audio-skeleton {
+    background: linear-gradient(
+        90deg,
+        rgba(79, 140, 255, 0.03) 25%,
+        rgba(0, 245, 212, 0.08) 50%,
+        rgba(79, 140, 255, 0.03) 75%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s ease-in-out infinite;
+    border-radius: 6px;
+}
+
+@keyframes skeleton-shimmer {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ─── Audio State Badges ────────────────────────────────────────── */
+#audio-state-badge {
+    padding: 2px 8px;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--rim);
+    transition: all 0.3s;
+}
+
+#audio-state-badge.playing {
+    color: var(--accent-green);
+    border-color: rgba(6, 255, 165, 0.3);
+    background: rgba(6, 255, 165, 0.08);
+    animation: badge-pulse 1.5s ease-in-out infinite;
+}
+
+#audio-state-badge.decoding {
+    color: var(--accent-cyan);
+    border-color: rgba(0, 245, 212, 0.3);
+    background: rgba(0, 245, 212, 0.08);
+    animation: badge-pulse 0.8s ease-in-out infinite;
+}
+
+#audio-state-badge.paused {
+    color: var(--accent-gold);
+    border-color: rgba(255, 214, 10, 0.3);
+}
+
+@keyframes badge-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.6; }
+}
+

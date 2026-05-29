@@ -170,6 +170,7 @@
                 <option value="smith">⑫ Abaque de Smith</option>
                 <option value="phasors">⑬ Diagramme de Fresnel (Phasors)</option>
                 <option value="game">🎮 Devine la TF — quiz</option>
+                <option value="audio_analyzer">⑭ Audio DSP — Analyseur Temps-Fréquence</option>
             </select>
 
             <!-- Algebra mode pickers — visible only when activeCombo === 'algebra' -->
@@ -185,6 +186,28 @@
                     <option value="freq_to_time">𝓕→⏰ Devine le signal</option>
                 </select>
                 <button id="game-reset-score" title="Remettre le score à zéro" style="padding:4px 10px; background:transparent; border:1px solid var(--rim); border-radius:4px; color:var(--text-bright); font-family:inherit; font-size:0.75rem; cursor:pointer;">↺ Score</button>
+            </div>
+
+            <!-- Audio Analyzer controls — visible only when activeCombo === 'audio_analyzer' -->
+            <div id="audio-controls-group" style="display:none; gap:6px; align-items:center;">
+                <label class="player-toggle-chip" id="audio-upload-btn" title="Charger un fichier audio (WAV, MP3, OGG, FLAC)" style="cursor:pointer; position:relative;">
+                    <div class="dot" style="background:var(--accent-green)"></div>
+                    <span>📂 CHARGER</span>
+                    <input type="file" id="audio-file-input" accept="audio/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;">
+                </label>
+                <select id="audio-fft-size" title="Taille FFT" style="background:rgba(0,0,0,0.5);border:1px solid var(--rim);color:var(--accent-cyan);font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.2rem 0.35rem;border-radius:4px;outline:none;cursor:pointer">
+                    <option value="512">FFT 512</option>
+                    <option value="1024">FFT 1024</option>
+                    <option value="2048" selected>FFT 2048</option>
+                    <option value="4096">FFT 4096</option>
+                </select>
+                <select id="audio-window-type" title="Fenêtrage" style="background:rgba(0,0,0,0.5);border:1px solid var(--rim);color:var(--accent-purple);font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.2rem 0.35rem;border-radius:4px;outline:none;cursor:pointer">
+                    <option value="hann">Hann</option>
+                    <option value="hamming">Hamming</option>
+                    <option value="blackman">Blackman</option>
+                    <option value="rectangular">Rectangulaire</option>
+                </select>
+                <span id="audio-file-label" style="font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--text-dim);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
             </div>
 
             <div class="player-toggle-chip" id="player-toggle" title="Lecture temporelle">
@@ -520,6 +543,34 @@
                         LOOP
                     </label>
                 </div>
+            </div>
+        </div>
+
+        <!-- Audio file drag-and-drop overlay -->
+        <div id="audio-drop-overlay">
+            <div class="audio-drop-content">
+                <div class="audio-drop-icon">🎵</div>
+                <div class="audio-drop-text">Déposer le fichier audio</div>
+                <div class="audio-drop-sub">WAV · MP3 · OGG · FLAC</div>
+            </div>
+        </div>
+
+        <!-- Audio Transport Bar — visible only in audio_analyzer mode -->
+        <div id="audio-transport-bar">
+            <div class="audio-transport-row">
+                <span class="audio-transport-btn" id="audio-play" title="Play">▶</span>
+                <span class="audio-transport-btn" id="audio-pause" title="Pause">⏸</span>
+                <span class="audio-transport-btn" id="audio-stop" title="Stop">⏹</span>
+
+                <input type="range" id="audio-scrubber" min="0" max="1000" value="0" style="flex:1; margin:0 0.5rem;">
+
+                <span id="audio-time-display" style="font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--accent-green);font-weight:700;min-width:100px;text-align:center;">
+                    0:00.0 / 0:00.0
+                </span>
+
+                <span id="audio-state-badge" style="font-family:'Space Mono',monospace;font-size:0.55rem;letter-spacing:0.12em;color:var(--text-dim);margin-left:auto;">
+                    ⏸ IDLE
+                </span>
             </div>
         </div>
 

@@ -2,9 +2,9 @@
 
 ## 1. Feature Description
 The Robotique app visualizes the maths behind industrial-robot programming, so you
-can trial a concept at home before typing it into the school simulator. Six tabs:
-Bras 2R, Rotations, Transformations homogènes, Repères & points, Bras 6 axes, and
-the VAL3/trsf sandbox.
+can trial a concept at home before typing it into the school simulator. Eight tabs:
+Bras 2R, Rotations, Transformations homogènes, Repères & points, Bras 6 axes,
+VAL3/trsf sandbox, Sim Repères (composition de transformations), and Trajectoires & Math.
 
 ## 2. How-To Use
 1. Open the GEII Visual Toolbox Galaxy, click the **Robotique** star.
@@ -20,6 +20,10 @@ the VAL3/trsf sandbox.
    are flagged (wrist / elbow / shoulder).
 7. **VAL3 / trsf**: run `compose`, `appro`, `setFrame` on poses; copy the result
    `(x,y,z,rx,ry,rz)` straight into the real simulator.
+8. **Sim Repères**: visualize frames (World, A, B relative to A) and compose them while
+   seeing the 6R robot arm.
+9. **Trajectoires & Math**: build paths by adding points and use the angle calculator
+   (3 points: A, B as vertex, C) to compute angles with an arc visualization.
 
 ## 3. Expected Outcome
 You see the robot pose / frame / arm update live, with the result pose and 4×4

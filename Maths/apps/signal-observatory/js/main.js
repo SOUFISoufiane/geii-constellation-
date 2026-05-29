@@ -31,6 +31,14 @@ import { initTooltips } from './ui/tooltips.js';
 import { initSidebarToggle } from './ui/sidebar-toggle.js';
 import { initNotebook } from './ui/notebook.js';
 
+// Audio DSP Analyzer
+import {
+    audioAnalyzerState, AudioState,
+    loadAudioFile, playAudio, pauseAudio, seekAudio, stopAudio,
+    setFFTSize, setWindowType
+} from './audio/file-audio-engine.js';
+import { renderAudioAnalyzer } from './plots/audio-viz.js';
+
 // ─── COMPUTE PIPELINE ────────────────────────────────────────────
 function computeSignal(signal) {
     if (!signal) return null;
@@ -93,10 +101,24 @@ function computeSignal(signal) {
 
 let lastComputed = null;
 let lastSignal = null;
+let _wasAudioMode = false;
 
 // ─── MASTER RENDER ──────────────────────────────────────────────
 function renderAll() {
     try {
+        // ── Audio Analyzer mode: bypass the synthetic signal pipeline ──
+        if (state.activeCombo === 'audio_analyzer') {
+            _wasAudioMode = true;
+            renderAudioAnalyzerMode();
+            return;
+        }
+
+        // Restore telemetry labels when leaving audio mode
+        if (_wasAudioMode) {
+            _wasAudioMode = false;
+            _setTelemetryLabels(ORIGINAL_LABELS);
+        }
+
         const signal = findSignal(state.funcId);
         if (!signal) return;
 
@@ -136,6 +158,96 @@ function renderAll() {
     } catch (e) {
         console.error("Render Error:", e);
     }
+}
+
+// ─── AUDIO ANALYZER RENDER PATH ─────────────────────────────────
+const ORIGINAL_LABELS = ['①TEMPOREL s(t)', '②AMPLITUDE |S(f)|', '③PHASE φ(f)', '④ENROULEMENT 2D'];
+const AUDIO_LABELS    = ['①OSCILLOSCOPE PCM', '②SPECTRE @ PLAYHEAD', '③PHASE φ(f)', '④RMS ENERGY'];
+
+function _setTelemetryLabels(labels) {
+    const els = document.querySelectorAll('.panel-label');
+    // Bottom 4 panels (last 4 .panel-label elements in raw telemetry section)
+    const bottomLabels = Array.from(els).slice(-4);
+    bottomLabels.forEach((el, i) => {
+        if (labels[i]) {
+            const numMatch = labels[i].match(/^([\u2460-\u2469])/);
+            const num = numMatch ? numMatch[1] : '';
+            const text = labels[i].replace(/^[\u2460-\u2469]/, '');
+            el.innerHTML = `<span class="num">${num}</span>${text}`;
+        }
+    });
+}
+
+function renderAudioAnalyzerMode() {
+    // Title update
+    const titleEl = document.getElementById('func-title');
+    if (titleEl) {
+        const s = audioAnalyzerState;
+        const badge = '<span class="badge">DSP</span>';
+        const name = s.fileName || 'Audio DSP Analyzer';
+        const desc = s.engineState === AudioState.IDLE
+            ? 'Glissez ou chargez un fichier audio'
+            : `${s.sampleRate} Hz · FFT ${s.fftSize} · ${s.windowType}`;
+        titleEl.innerHTML = `${badge}<span>${name}</span><span style="color:var(--text-dim);font-weight:400">— ${desc}</span>`;
+    }
+
+    // Update telemetry labels for audio mode
+    _setTelemetryLabels(AUDIO_LABELS);
+
+    // Render via the audio-viz module (handles all 4 states)
+    renderAudioAnalyzer();
+    refreshParamsBoard();
+    toggleConvPanel(false);
+
+    // Update the transport bar
+    _syncAudioTransport();
+}
+
+function _syncAudioTransport() {
+    const s = audioAnalyzerState;
+    const scrubber = document.getElementById('audio-scrubber');
+    const timeDisp = document.getElementById('audio-time-display');
+    const badge    = document.getElementById('audio-state-badge');
+    const bar      = document.getElementById('audio-transport-bar');
+
+    if (scrubber && s.duration > 0) {
+        scrubber.value = (s.currentTime / s.duration) * 1000;
+    }
+    if (timeDisp) {
+        timeDisp.textContent = `${_fmtTime(s.currentTime)} / ${_fmtTime(s.duration)}`;
+    }
+    if (badge) {
+        badge.className = '';
+        switch (s.engineState) {
+            case AudioState.PLAYING:
+                badge.textContent = '▶ PLAYING';
+                badge.classList.add('playing');
+                break;
+            case AudioState.PAUSED:
+                badge.textContent = '⏸ PAUSED';
+                badge.classList.add('paused');
+                break;
+            case AudioState.DECODING:
+                badge.textContent = '⏳ DECODING';
+                badge.classList.add('decoding');
+                break;
+            case AudioState.READY:
+                badge.textContent = '● READY';
+                break;
+            default:
+                badge.textContent = '⏸ IDLE';
+        }
+    }
+    if (bar) {
+        bar.classList.toggle('playing', s.engineState === AudioState.PLAYING);
+    }
+}
+
+function _fmtTime(sec) {
+    if (!sec || !isFinite(sec)) return '0:00.0';
+    const m = Math.floor(sec / 60);
+    const s = (sec % 60).toFixed(1);
+    return `${m}:${s.padStart(4, '0')}`;
 }
 
 function addSamplesOverlay(signal) {
@@ -291,6 +403,9 @@ function boot() {
 
         initConvolutionUI();
 
+        // ── Audio DSP Analyzer controls ──
+        initAudioAnalyzerControls();
+
         // Tier 1 Phase 6 (C): Animation recorder toggle
         const recordToggle = document.getElementById('record-toggle');
         if (recordToggle) {
@@ -375,3 +490,113 @@ window.addEventListener('keydown', e => {
 });
 
 whenReady(boot);
+
+// ─── AUDIO ANALYZER CONTROLS ────────────────────────────────────
+function initAudioAnalyzerControls() {
+    const audioGroup    = document.getElementById('audio-controls-group');
+    const fileInput     = document.getElementById('audio-file-input');
+    const fileLabel     = document.getElementById('audio-file-label');
+    const fftSizeSelect = document.getElementById('audio-fft-size');
+    const windowSelect  = document.getElementById('audio-window-type');
+    const playBtn       = document.getElementById('audio-play');
+    const pauseBtn      = document.getElementById('audio-pause');
+    const stopBtn       = document.getElementById('audio-stop');
+    const scrubber      = document.getElementById('audio-scrubber');
+    const transportBar  = document.getElementById('audio-transport-bar');
+    const dropOverlay   = document.getElementById('audio-drop-overlay');
+    const mainEl        = document.getElementById('main');
+
+    // Toggle visibility of audio controls when combo mode changes
+    const comboSel = document.getElementById('combo-selector');
+    function syncAudioUI() {
+        const isAudio = state.activeCombo === 'audio_analyzer';
+        if (audioGroup)   audioGroup.style.display   = isAudio ? 'flex' : 'none';
+        if (transportBar) transportBar.classList.toggle('visible', isAudio);
+    }
+    if (comboSel) {
+        comboSel.addEventListener('change', syncAudioUI);
+    }
+    // Initial sync
+    syncAudioUI();
+
+    // ── File input ──
+    async function handleFile(file) {
+        if (!file) return;
+        try {
+            if (fileLabel) fileLabel.textContent = file.name;
+            await loadAudioFile(file);
+            notify();
+        } catch (err) {
+            alert('Erreur de décodage audio — voir la console.');
+        }
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files?.[0];
+            if (file) handleFile(file);
+        });
+    }
+
+    // ── Drag-and-Drop ──
+    if (mainEl && dropOverlay) {
+        let dragCounter = 0;
+
+        mainEl.addEventListener('dragenter', (e) => {
+            if (state.activeCombo !== 'audio_analyzer') return;
+            e.preventDefault();
+            dragCounter++;
+            dropOverlay.classList.add('visible');
+        });
+
+        mainEl.addEventListener('dragover', (e) => {
+            if (state.activeCombo !== 'audio_analyzer') return;
+            e.preventDefault();
+        });
+
+        mainEl.addEventListener('dragleave', (e) => {
+            if (state.activeCombo !== 'audio_analyzer') return;
+            dragCounter--;
+            if (dragCounter <= 0) {
+                dragCounter = 0;
+                dropOverlay.classList.remove('visible');
+            }
+        });
+
+        mainEl.addEventListener('drop', (e) => {
+            if (state.activeCombo !== 'audio_analyzer') return;
+            e.preventDefault();
+            dragCounter = 0;
+            dropOverlay.classList.remove('visible');
+            const file = e.dataTransfer.files?.[0];
+            if (file && file.type.startsWith('audio/')) {
+                handleFile(file);
+            }
+        });
+    }
+
+    // ── Transport controls ──
+    if (playBtn)  playBtn.addEventListener('click',  () => { playAudio(); });
+    if (pauseBtn) pauseBtn.addEventListener('click', () => { pauseAudio(); });
+    if (stopBtn)  stopBtn.addEventListener('click',  () => { stopAudio(); notify(); });
+
+    if (scrubber) {
+        scrubber.addEventListener('input', (e) => {
+            const ratio = parseFloat(e.target.value) / 1000;
+            const t = ratio * audioAnalyzerState.duration;
+            seekAudio(t);
+        });
+    }
+
+    // ── FFT params ──
+    if (fftSizeSelect) {
+        fftSizeSelect.addEventListener('change', (e) => {
+            setFFTSize(parseInt(e.target.value));
+        });
+    }
+    if (windowSelect) {
+        windowSelect.addEventListener('change', (e) => {
+            setWindowType(e.target.value);
+        });
+    }
+}

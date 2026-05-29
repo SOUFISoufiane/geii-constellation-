@@ -10,6 +10,7 @@ import { baseLayout, baseLayoutLegend, axisTitle, PALETTE, COSMIC_COLORSCALE, PL
 import { renderConvolution } from './convolution.js';
 import { renderAlgebra } from './algebra.js';
 import { renderGame } from './game.js';
+import { renderAudioAnalyzer } from './audio-viz.js';
 
 /**
  * Main fusion plot dispatcher.
@@ -30,6 +31,7 @@ export function renderFusion(mode, signal, state, computed) {
         case 'smith':       return renderSmith(signal, state, computed);
         case 'phasors':     return renderPhasors(signal, state, computed);
         case 'game':        return renderGame(signal, state, computed);
+        case 'audio_analyzer': return renderAudioAnalyzer();
         default:          return renderParseval(signal, state, computed);
     }
 }

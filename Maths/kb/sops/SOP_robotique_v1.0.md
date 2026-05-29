@@ -4,7 +4,7 @@
 To outline the standard operating procedure for maintaining and extending the Robotique app (kinematics, frames, transforms, 6-axis arm, VAL3 geometry sandbox) of the GEII Visual Toolbox.
 
 ## 2. Scope
-Applies to `Maths/apps/robotique/` (index.html, js/main.js, js/modules/*) and the shared kinematics helper `js/modules/robokit.js`. Built from the "RoboIndus Cinématique TD1/TD2" and "TP_STAUBLI" course documents.
+Applies to `Maths/apps/robotique/` (index.html, js/main.js, js/modules/*) and the shared kinematics helper `js/modules/robokit.js`. Built from the "RoboIndus Cinématique TD1/TD2" and "TP_STAUBLI" course documents. The app now includes 8 tabs (including Sim Repères and Trajectoires & Math).
 
 ## 3. Prerequisites
 - Access to the `Maths` repository.
@@ -14,7 +14,7 @@ Applies to `Maths/apps/robotique/` (index.html, js/main.js, js/modules/*) and th
 
 ## 4. Procedure
 1. **Starting the dev server**: `python dev_server.py 8123` in the `Maths` root.
-2. **Editing a module**: each tab is one file in `js/modules/` (`arm2r`, `rotation`, `homogeneous`, `frames`, `arm6r`, `val3`). Wire new tabs in `js/main.js` (INIT map + NEEDS_KATEX set) and add the panel + tab button in `index.html`.
+2. **Editing a module**: each tab is one file in `js/modules/` (`arm2r`, `rotation`, `homogeneous`, `frames`, `arm6r`, `val3`, `simframes`, `pointsmath`). Wire new tabs in `js/main.js` (INIT map + NEEDS_KATEX set) and add the panel + tab button in `index.html`.
 3. **Changing kinematics math**: edit `robokit.js` (single source of truth for DH, FK `fk6`, IK `ik6`, pose⇄matrix, VAL3 ops). Never duplicate the DH table in a module.
 4. **Verifying math before UI**: run FK∘IK round-trip and pose round-trip tests with `node --input-type=module` against `robokit.js`. Confirm errors < 2·10⁻³ before browser testing.
 5. **Plot sizing**: always render Plotly via `renderPlot` from `shared/js/plot-fit.js`, never raw `Plotly.react` (avoids the collapsed-`svg-container` blank-plot bug).
@@ -28,3 +28,4 @@ Applies to `Maths/apps/robotique/` (index.html, js/main.js, js/modules/*) and th
 
 ## 6. Revision History
 - **v1.0**: Initial creation — app built to 6 tabs (2R, rotations, homogeneous, frames & points, 6-axis with joint+cartesian control & singularities, VAL3/trsf sandbox).
+- **v1.1**: Added 2 new tabs (`simframes` for visual frame composition and `pointsmath` for trajectory/angle maths).
