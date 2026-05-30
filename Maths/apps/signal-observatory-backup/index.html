@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signal Observatory v5 — TFC / GEII BUT2</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>🌌</text></svg>">
+
+    <!-- External libraries -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+        onload="renderMathInElement(document.body, {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+
+    <!-- Shared theme (toolbox-wide) -->
+    <link rel="stylesheet" href="../../shared/css/theme.css">
+    <link rel="stylesheet" href="../../shared/css/toolbox.css">
+    <!-- App-specific UI -->
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/equation-panel.css">
+    <script>
+        // Dev-only CSS cache buster (dev_server.py already disables caching server-side)
+        document.querySelectorAll('link[rel="stylesheet"]').forEach(l => {
+            const href = l.getAttribute('href');
+            if (href && !href.startsWith('http')) l.href = href + '?v=' + Date.now();
+        });
+    </script>
+</head>
+<body>
+    <!-- Toolbox header (back-to-home + theme cycler) — injected at runtime -->
+    <script type="module">
+        // Dynamic import so we can cache-bust via query string.
+        const { mountAppHeader } = await import(
+            `../../shared/js/app-header.js?v=${Date.now()}`
+        );
+        mountAppHeader('signal-observatory');
+    </script>
+
+    <!-- Cosmic background layers -->
+    <div class="hud-scanlines"></div>
+    <div class="vignette"></div>
+
+    <!-- ═══════════════ SIDEBAR ═══════════════ -->
+    <aside id="sidebar">
+        <!-- Collapse toggle button -->
+        <button id="sidebar-collapse-btn" title="Réduire / Étendre la sidebar (Ctrl+B)">
+            <span class="icon">◀</span>
+        </button>
+
+        <!-- Vertical label shown when collapsed -->
+        <div id="sidebar-collapsed-label">SIGNAL OBS · v5</div>
+
+        <header id="sidebar-header">
+            <div class="logo-title">SIGNAL OBS.</div>
+            <div class="logo-sub">Fourier Space Observatory v5.0</div>
+            <div class="signal-indicator">EVENT HORIZON · TELEMETRY UPLINK</div>
+        </header>
+
+        <nav id="tabs-container"></nav>
+
+        <!-- Math formula panel (bottom of sidebar) — resizable -->
+        <div id="formula-panel">
+            <!-- Resize handle on top edge -->
+            <div id="formula-resize-handle" title="Glissez pour redimensionner">
+                <div class="resize-grip"></div>
+            </div>
+
+            <div class="formula-panel-inner">
+                <div class="formula-section">
+                    <div class="formula-label">▸ DOMAINE TEMPOREL s(t)</div>
+                    <div id="formula-time"></div>
+                </div>
+
+                <div class="formula-section">
+                    <div class="formula-label">▸ TRANSFORMÉE S(f)</div>
+                    <div id="formula-freq"></div>
+                </div>
+
+                <div class="formula-section">
+                    <div class="formula-label">▸ MODULE |S(f)|</div>
+                    <div id="formula-mag"></div>
+                </div>
+
+                <div class="formula-section">
+                    <div class="formula-label">▸ PHASE φ(f)</div>
+                    <div id="formula-phase"></div>
+                </div>
+
+                <div class="formula-section">
+                    <div class="formula-label">▸ FILTRE H(f)</div>
+                    <div id="formula-filter"></div>
+                </div>
+
+                <div class="formula-section">
+                    <div class="formula-label">▸ SORTIE FILTRÉE Y(f) = S(f)·H(f)</div>
+                    <div id="formula-output"></div>
+                </div>
+
+                <div class="formula-section">
+                    <div class="formula-label">▸ ÉNERGIE (Parseval)</div>
+                    <div id="formula-parseval"></div>
+                </div>
+
+                <div class="formula-section">
+                    <div class="formula-label">▸ CONSTANTES CALCULÉES</div>
+                    <div id="formula-constants"></div>
+                </div>
+
+                <div class="formula-section">
+                    <div class="formula-label">▸ THÉORÈME ACTIF</div>
+                    <div id="formula-theorem"></div>
+                </div>
+
+                <!-- Tier 1 Phase 4 (E): Step-by-step derivation panel -->
+                <div class="formula-section" id="formula-demarche-section">
+                    <div class="formula-label demarche-toggle" id="demarche-toggle" style="cursor:pointer; user-select:none;">
+                        <span id="demarche-arrow">▸</span> DÉMARCHE — preuve pas à pas
+                    </div>
+                    <div id="formula-demarche" style="display:none; margin-top:8px;"></div>
+                </div>
+
+                <!-- Tier 3: Notebook -->
+                <div class="formula-section" id="formula-notebook-section">
+                    <div class="formula-label demarche-toggle" id="notebook-toggle" style="cursor:pointer; user-select:none;">
+                        <span id="notebook-arrow">▸</span> NOTEBOOK — snapshots
+                    </div>
+                    <div id="notebook-container" style="display:none; margin-top:8px;">
+                        <input type="text" id="notebook-note" placeholder="Note pour ce snapshot..." style="width:100%; padding:4px; background:transparent; color:var(--text-bright); border:1px solid var(--rim); font-family:inherit; font-size:11px; margin-bottom:4px; border-radius:2px;">
+                        <button id="notebook-save" style="width:100%; padding:4px; background:rgba(0,245,212,0.1); border:1px solid var(--accent-cyan); color:var(--accent-cyan); cursor:pointer; font-family:inherit; font-size:10px; border-radius:2px;">💾 SAUVEGARDER L'ÉTAT</button>
+                        <div id="notebook-list" style="margin-top:8px; display:flex; flex-direction:column; gap:4px; font-size:11px; max-height:200px; overflow-y:auto;"></div>
+                    </div>
+                </div>
+
+                <!-- Tier 1 Phase 5 (D): Glossary -->
+                <div class="formula-section" id="formula-glossary-section"></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ═══════════════ MAIN ═══════════════ -->
+    <main id="main">
+        <!-- Topbar controls -->
+        <div id="topbar">
+            <div id="func-title">Initialisation…</div>
+
+            <!-- Aliasing alert badge -->
+            <div id="aliasing-badge">
+                <span class="alias-icon ok">✓</span>
+                <div>
+                    <div class="alias-title">SHANNON OK</div>
+                    <div class="alias-detail">Initialisation…</div>
+                </div>
+            </div>
+
+            <div style="flex:1"></div> <!-- Spacer to push selectors to the right -->
+
+            <select id="combo-selector">
+                <option value="parseval">① Parseval — Équivalence Énergétique</option>
+                <option value="stability">② Bode / Nyquist — Stabilité</option>
+                <option value="winding">③ Enroulement Complexe 3D</option>
+                <option value="stft">④ STFT — Spectrogramme</option>
+                <option value="filter">⑤ Filtre Butterworth — Réponse</option>
+                <option value="convolution">⑥ Convolution s ∗ h — Pédagogique</option>
+                <option value="bode_pure">⑦ Bode pur — Magnitude + Phase</option>
+                <option value="nyquist_pure">⑧ Nyquist pur — Lieu complexe</option>
+                <option value="waterfall">⑨ Waterfall 3D — Évolution temporelle</option>
+                <option value="algebra">⑩ Algèbre de signaux — s₁ ⊕ s₂</option>
+                <option value="polezero">⑪ Carte Pôles-Zéros (Filtres)</option>
+                <option value="smith">⑫ Abaque de Smith</option>
+                <option value="phasors">⑬ Diagramme de Fresnel (Phasors)</option>
+                <option value="game">🎮 Devine la TF — quiz</option>
+                <option value="audio_analyzer">⑭ Audio DSP — Analyseur Temps-Fréquence</option>
+            </select>
+
+            <!-- Algebra mode pickers — visible only when activeCombo === 'algebra' -->
+            <div id="algebra-picker-group" style="display:none; gap:6px; align-items:center;">
+                <select id="algebra-sig-b" title="Second signal s₂"></select>
+                <select id="algebra-op" title="Opération binaire"></select>
+            </div>
+
+            <!-- Game mode controls — visible only when activeCombo === 'game' -->
+            <div id="game-controls-group" style="display:none; gap:6px; align-items:center;">
+                <select id="game-direction" title="Sens du quiz">
+                    <option value="time_to_freq">⏰→𝓕 Devine le spectre</option>
+                    <option value="freq_to_time">𝓕→⏰ Devine le signal</option>
+                </select>
+                <button id="game-reset-score" title="Remettre le score à zéro" style="padding:4px 10px; background:transparent; border:1px solid var(--rim); border-radius:4px; color:var(--text-bright); font-family:inherit; font-size:0.75rem; cursor:pointer;">↺ Score</button>
+            </div>
+
+            <!-- Audio Analyzer controls — visible only when activeCombo === 'audio_analyzer' -->
+            <div id="audio-controls-group" style="display:none; gap:6px; align-items:center;">
+                <label class="player-toggle-chip" id="audio-upload-btn" title="Charger un fichier audio (WAV, MP3, OGG, FLAC)" style="cursor:pointer; position:relative;">
+                    <div class="dot" style="background:var(--accent-green)"></div>
+                    <span>📂 CHARGER</span>
+                    <input type="file" id="audio-file-input" accept="audio/*" style="position:absolute;inset:0;opacity:0;cursor:pointer;">
+                </label>
+                <select id="audio-fft-size" title="Taille FFT" style="background:rgba(0,0,0,0.5);border:1px solid var(--rim);color:var(--accent-cyan);font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.2rem 0.35rem;border-radius:4px;outline:none;cursor:pointer">
+                    <option value="512">FFT 512</option>
+                    <option value="1024">FFT 1024</option>
+                    <option value="2048" selected>FFT 2048</option>
+                    <option value="4096">FFT 4096</option>
+                </select>
+                <select id="audio-window-type" title="Fenêtrage" style="background:rgba(0,0,0,0.5);border:1px solid var(--rim);color:var(--accent-purple);font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.2rem 0.35rem;border-radius:4px;outline:none;cursor:pointer">
+                    <option value="hann">Hann</option>
+                    <option value="hamming">Hamming</option>
+                    <option value="blackman">Blackman</option>
+                    <option value="rectangular">Rectangulaire</option>
+                </select>
+                <span id="audio-file-label" style="font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--text-dim);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+            </div>
+
+            <div class="player-toggle-chip" id="player-toggle" title="Lecture temporelle">
+                <div class="dot"></div>
+                <span>PLAY</span>
+            </div>
+
+            <div class="player-toggle-chip freq" id="fplayer-toggle" title="Balayage fréquentiel">
+                <div class="dot"></div>
+                <span>FREQ</span>
+            </div>
+
+            <div class="player-toggle-chip params" id="params-toggle" title="Tableau des paramètres">
+                <div class="dot"></div>
+                <span>⚙ PARAMS</span>
+            </div>
+
+            <!-- Tier 1 Phase 6 (C): Animation recorder -->
+            <div class="player-toggle-chip" id="record-toggle" title="Enregistrer une vidéo WebM du graphique principal">
+                <div class="dot"></div>
+                <span>🎥 REC</span>
+            </div>
+
+            <!-- Tier 2 Phase 1: CSV Export -->
+            <div class="player-toggle-chip" id="export-csv-toggle" title="Exporter les données du signal en CSV">
+                <div class="dot" style="background:var(--accent-cyan)"></div>
+                <span>💾 CSV</span>
+            </div>
+
+            <div class="uplink-indicator" title="Telemetry uplink active">
+                <div class="uplink-bar"></div>
+                <div class="uplink-bar"></div>
+                <div class="uplink-bar"></div>
+                <div class="uplink-bar"></div>
+            </div>
+        </div>
+
+        <!-- Hovering Parameters Board (draggable) -->
+        <div id="params-board">
+            <div class="params-header" id="params-header">
+                <span class="params-title">⚙ PARAMETERS BOARD</span>
+                <span class="params-close" id="params-close">✕</span>
+            </div>
+            <div class="params-body">
+                <!-- Filter section -->
+                <div class="params-section">
+                    <div class="params-section-title" style="color:var(--accent-red)">▸ FILTRE</div>
+                    <div class="params-row">
+                        <label>Type</label>
+                        <select id="params-filter-type" class="params-select">
+                            <optgroup label="Analogiques">
+                                <option value="butterworth">Butterworth</option>
+                                <option value="chebyshev1">Chebyshev I</option>
+                                <option value="chebyshev2">Chebyshev II</option>
+                                <option value="bessel">Bessel</option>
+                                <option value="rc">RC (1er ordre)</option>
+                                <option value="rlc">RLC (2nd ordre)</option>
+                            </optgroup>
+                            <optgroup label="Numériques">
+                                <option value="fir">FIR sinc-Hann</option>
+                                <option value="iir">IIR biquad</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="params-row">
+                        <label>f<sub>c</sub> (Hz) <input type="number" id="params-fc-val" class="editable-val val-red" value="0.5" step="0.1"></label>
+                        <input type="range" id="params-fc" min="-1000" max="1000" step="1" value="-231" class="red">
+                    </div>
+                    <div class="params-row">
+                        <label>Ordre n <input type="number" id="params-order-val" class="editable-val val-gold" value="1" min="1" max="4" step="1"></label>
+                        <input type="range" id="params-order" min="1" max="4" step="1" value="1" class="gold">
+                    </div>
+                    <div class="params-row">
+                        <label class="toggle-row">
+                            <input type="checkbox" id="params-apply-everywhere" checked>
+                            <span>Appliquer le filtre à tous les graphs</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Frequency / Winding section -->
+                <div class="params-section">
+                    <div class="params-section-title" style="color:var(--accent-blue)">▸ FRÉQUENCE</div>
+                    <div class="params-row">
+                        <label>Rotation (Hz) <input type="number" id="params-rot-val" class="editable-val val-blue" value="1.0" step="0.1"></label>
+                        <input type="range" id="params-rot" min="-20" max="20" step="0.05" value="1" class="blue">
+                    </div>
+                    <div class="params-row">
+                        <label>f<sub>s</sub> échantillonnage (Hz) <input type="number" id="params-fs-val" class="editable-val" style="color:var(--accent-magenta)" value="8.0" step="0.1"></label>
+                        <input type="range" id="params-fs" min="0.5" max="40" step="0.1" value="8" class="magenta">
+                    </div>
+                </div>
+
+                <!-- Signal section -->
+                <div class="params-section">
+                    <div class="params-section-title" style="color:var(--accent-cyan)">▸ SIGNAL</div>
+                    <div class="params-row">
+                        <label class="toggle-row">
+                            <input type="checkbox" id="params-noise">
+                            <span>Injection bruit (3.8 Hz + blanc)</span>
+                        </label>
+                    </div>
+                    <div class="params-row">
+                        <label class="toggle-row">
+                            <input type="checkbox" id="params-peaks">
+                            <span>Détection des pics (fréq)</span>
+                        </label>
+                    </div>
+                    <div class="params-row">
+                        <label class="toggle-row">
+                            <input type="checkbox" id="params-envelope">
+                            <span>Enveloppe Spectrale</span>
+                        </label>
+                    </div>
+                    <!-- Tier 2 Phase 2: Harmonics -->
+                    <div class="params-row">
+                        <label class="toggle-row">
+                            <input type="checkbox" id="params-harmonics">
+                            <span>Harmoniques (Multiples rot.)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Visuals section (Pillar 1) -->
+                <div class="params-section">
+                    <div class="params-section-title" style="color:var(--accent-purple)">▸ VISUELS</div>
+                    <div class="params-row">
+                        <label>Thème</label>
+                        <select id="params-theme" class="params-select">
+                            <option value="cosmic">Cosmic (Noir Profond)</option>
+                            <option value="theme-amber">Amber CRT (Rétro)</option>
+                            <option value="theme-solarized">Solarized (Scientifique)</option>
+                            <option value="theme-print">Print / Light (Blanc)</option>
+                        </select>
+                    </div>
+                    <div class="params-row">
+                        <label>Intensité Bloom <input type="number" id="params-bloom-val" class="editable-val" value="1.0" step="0.1" style="color:var(--accent-purple)"></label>
+                        <input type="range" id="params-bloom" min="0" max="4" step="0.1" value="1" class="purple">
+                    </div>
+                    <div class="params-row">
+                        <label>Opacité Scanlines <input type="number" id="params-scanline-val" class="editable-val" value="1.0" step="0.1" style="color:var(--accent-purple)"></label>
+                        <input type="range" id="params-scanline" min="0" max="5" step="0.1" value="1" class="purple">
+                    </div>
+                </div>
+
+                <!-- Signal Orchestration (Pillar 2) -->
+                <div class="params-section">
+                    <div class="params-section-title" style="color:var(--accent-green)">▸ TRAITEMENT AVANCÉ</div>
+                    <div class="params-row">
+                        <label>Fenêtrage FFT</label>
+                        <select id="params-fft-window" class="params-select">
+                            <option value="rectangular">Rectangulaire (None)</option>
+                            <option value="hann">Hann (Raised Cosine)</option>
+                            <option value="hamming">Hamming</option>
+                            <option value="blackman">Blackman-Harris</option>
+                        </select>
+                    </div>
+                    <div class="params-row">
+                        <label>Profil de Bruit</label>
+                        <select id="params-noise-type" class="params-select">
+                            <option value="white">Blanc (Gaussian)</option>
+                            <option value="pink">Rose (1/f)</option>
+                            <option value="brown">Brun (1/f²)</option>
+                        </select>
+                    </div>
+                    <div class="params-row">
+                        <label class="toggle-row">
+                            <input type="checkbox" id="params-unwrap-phase">
+                            <span>Dérouler la Phase (unwrap)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Plot Interface (Pillar 3) -->
+                <div class="params-section">
+                    <div class="params-section-title" style="color:var(--accent-gold)">▸ INTERFACE GRAPHIQUE</div>
+                    <div class="params-row">
+                        <label class="toggle-row">
+                            <input type="checkbox" id="params-show-grids" checked>
+                            <span>Afficher les Grilles</span>
+                        </label>
+                    </div>
+                    <div class="params-row">
+                        <label>Style de Tracé</label>
+                        <select id="params-trace-style" class="params-select">
+                            <option value="solid">Ligne Pleine</option>
+                            <option value="dashed">Pointillés</option>
+                            <option value="gradient">Dégradé Énergétique</option>
+                        </select>
+                    </div>
+                    <div class="params-row">
+                        <label>Caméra 3D (presets)</label>
+                        <div class="flex-row gap-4" style="margin-top:4px">
+                            <button class="player-toggle-chip" id="cam-iso" style="flex:1; padding:2px">ISO</button>
+                            <button class="player-toggle-chip" id="cam-top" style="flex:1; padding:2px">TOP</button>
+                            <button class="player-toggle-chip" id="cam-side" style="flex:1; padding:2px">SIDE</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Performance (Pillar 4) -->
+                <div class="params-section">
+                    <div class="params-section-title" style="color:var(--accent-red)">▸ PERFORMANCE</div>
+                    <div class="params-row">
+                        <label>Limite FPS <input type="number" id="params-fps-val" class="editable-val val-red" value="60" step="5"></label>
+                        <input type="range" id="params-fps" min="10" max="144" step="5" value="60" class="red">
+                    </div>
+                    <div class="params-row">
+                        <label>Taille du Buffer (N) <input type="number" id="params-buffer-val" class="editable-val val-red" value="1024" step="128"></label>
+                        <input type="range" id="params-buffer" min="256" max="4096" step="128" value="1024" class="red">
+                    </div>
+                </div>
+
+                <!-- Read-only info -->
+                <div class="params-section">
+                    <div class="params-section-title" style="color:var(--text-mid)">▸ CALCULÉ</div>
+                    <div class="params-info" id="params-info-calc">
+                        <span>τ = …</span><br>
+                        <span>Pente = …</span><br>
+                        <span>f<sub>Nyquist</sub> = …</span><br>
+                        <span>Période rot. = …</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Extra controls panel (floating right) -->
+        <div id="extra-controls"></div>
+
+        <!-- Convolution controls (floating right, mode 6) -->
+        <div id="conv-controls">
+            <div class="conv-title">▸ CONVOLUTION s ∗ h</div>
+
+            <div class="conv-picker-label fn-a"><span class="pill">A</span>SIGNAL s(t)</div>
+            <select class="conv-select" id="conv-fn-a">
+                <!-- populated dynamically -->
+            </select>
+
+            <div class="conv-picker-label fn-b"><span class="pill">B</span>NOYAU h(t)</div>
+            <select class="conv-select" id="conv-fn-b">
+                <!-- populated dynamically -->
+            </select>
+
+            <div class="conv-shift-ctrl">
+                <label>DÉCALAGE τ : <input type="number" id="conv-tau-val" class="editable-val" style="color:var(--accent-purple); width:60px" value="0.00" step="0.05"> s</label>
+                <input type="range" id="conv-tau-slider" min="-3" max="5" step="0.05" value="0" class="purple">
+            </div>
+
+            <button class="conv-play-btn" id="conv-animate-btn">▶ ANIMER LA CONVOLUTION</button>
+
+            <div class="conv-info" id="conv-info">
+                <div class="highlight">Pédagogie :</div>
+                Le décalage τ glisse <b style="color:var(--accent-gold)">h(t−τ)</b> sur <b style="color:var(--accent-blue)">s(τ)</b>.
+                L'aire de leur produit pour chaque τ donne <b style="color:var(--accent-purple)">(s∗h)(t)</b>.
+            </div>
+        </div>
+
+        <!-- Frequency Sweep Player panel -->
+        <div id="fplayer-panel">
+            <div class="player-row">
+                <span class="fplay-btn" id="fplay-play" title="Sweep">▶</span>
+                <span class="fplay-btn" id="fplay-pause" title="Pause">⏸</span>
+                <span class="fplay-btn" id="fplay-reset" title="Reset">⟲</span>
+
+                <span style="font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--accent-magenta);font-weight:700;margin-left:0.4rem">
+                    f = <input type="number" id="fplay-current" class="editable-val" style="color:var(--accent-magenta); width:70px" value="1.000" step="0.001"> Hz
+                </span>
+
+                <span id="fplay-status" style="margin-left:auto;font-family:'Space Mono',monospace;font-size:0.55rem;letter-spacing:0.12em;color:var(--text-mid)">⏸ PAUSED</span>
+            </div>
+
+            <div class="player-row">
+                <div class="player-mini-ctrl">
+                    f<sub>min</sub> <input type="number" id="fplay-fmin-val" class="editable-val" style="color:var(--accent-magenta); width:50px" value="-3.0" step="0.1"> Hz
+                    <input type="range" id="fplay-fmin" min="-20" max="20" step="0.1" value="-3" class="magenta">
+                </div>
+                <div class="player-mini-ctrl">
+                    f<sub>max</sub> <input type="number" id="fplay-fmax-val" class="editable-val" style="color:var(--accent-magenta); width:50px" value="3.0" step="0.1"> Hz
+                    <input type="range" id="fplay-fmax" min="-20" max="20" step="0.1" value="3" class="magenta">
+                </div>
+                <div class="player-mini-ctrl">
+                    T <input type="number" id="fplay-period-val" class="editable-val" style="color:var(--accent-magenta); width:50px" value="4.0" step="0.1"> s
+                    <input type="range" id="fplay-period" min="0.5" max="20" step="0.1" value="4" class="magenta">
+                </div>
+                <div class="player-mini-ctrl">
+                    SPEED <input type="number" id="fplay-speed-val" class="editable-val" style="color:var(--accent-magenta); width:50px" value="1.0" step="0.1"> x
+                    <input type="range" id="fplay-speed" min="-1000" max="1000" step="1" value="464" class="magenta">
+                </div>
+                <div class="player-mini-ctrl">
+                    MODE
+                    <select id="fplay-mode" style="background:rgba(0,0,0,0.5);border:1px solid var(--rim);color:var(--accent-magenta);font-family:'Space Mono',monospace;font-size:0.55rem;padding:0.2rem 0.35rem;border-radius:4px;outline:none;cursor:pointer">
+                        <option value="linear">Linéaire (triangle)</option>
+                        <option value="log">Logarithmique</option>
+                        <option value="sine">Sinus (smooth)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Temporal Player panel (floating bottom-center) -->
+        <div id="player-panel">
+            <div class="player-row">
+                <span class="player-btn" id="player-play" title="Play">▶</span>
+                <span class="player-btn" id="player-pause" title="Pause">⏸</span>
+                <span class="player-btn" id="player-reset" title="Reset">⟲</span>
+
+                <input type="range" id="player-scrubber" min="0" max="1000" value="0">
+
+                <input type="number" id="player-time-val" class="editable-val" style="color:var(--accent-green); width:65px" value="0.00" step="0.01"> s
+                <span id="player-status">⏸ PAUSED</span>
+            </div>
+
+            <div class="player-row">
+                <div class="player-mini-ctrl">
+                    SPEED <input type="number" id="player-speed-val" class="editable-val" style="color:var(--accent-green); width:50px" value="1.0" step="0.1"> x
+                    <input type="range" id="player-speed" min="-1000" max="1000" step="1" value="464">
+                </div>
+                <div class="player-mini-ctrl">
+                    PÉRIODE T <input type="number" id="player-period-val" class="editable-val" style="color:var(--accent-green); width:50px" value="2.0" step="0.1"> s
+                    <input type="range" id="player-period" min="0.2" max="10" step="0.1" value="2">
+                </div>
+                <div class="player-mini-ctrl">
+                    DÉBUT <input type="number" id="player-frame-start-val" class="editable-val" style="color:var(--accent-green); width:50px" value="-3.0" step="0.1"> s
+                    <input type="range" id="player-frame-start" min="-3" max="0" step="0.1" value="-3">
+                </div>
+                <div class="player-mini-ctrl">
+                    FIN <input type="number" id="player-frame-end-val" class="editable-val" style="color:var(--accent-green); width:50px" value="5.0" step="0.1"> s
+                    <input type="range" id="player-frame-end" min="0.5" max="5" step="0.1" value="5">
+                </div>
+                <div class="player-mini-ctrl">
+                    <label style="display:inline-flex;align-items:center;gap:4px;cursor:pointer">
+                        <input type="checkbox" id="player-loop" checked style="accent-color:var(--accent-green)">
+                        LOOP
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audio file drag-and-drop overlay -->
+        <div id="audio-drop-overlay">
+            <div class="audio-drop-content">
+                <div class="audio-drop-icon">🎵</div>
+                <div class="audio-drop-text">Déposer le fichier audio</div>
+                <div class="audio-drop-sub">WAV · MP3 · OGG · FLAC</div>
+            </div>
+        </div>
+
+        <!-- Audio Transport Bar — visible only in audio_analyzer mode -->
+        <div id="audio-transport-bar" class="retro-audio-deck">
+            <!-- Controls Deck -->
+            <div class="retro-controls-deck">
+                <div class="retro-transport-group">
+                    <button class="retro-btn" id="audio-play" title="Play"><span class="icon" style="color:var(--accent-green)">▶</span></button>
+                    <button class="retro-btn" id="audio-pause" title="Pause"><span class="icon" style="color:var(--accent-gold)">⏸</span></button>
+                    <button class="retro-btn" id="audio-stop" title="Stop"><span class="icon" style="color:var(--accent-red)">⏹</span></button>
+                </div>
+                
+                <span id="audio-time-display" class="retro-time" style="font-size:0.8rem; margin-left:10px;">0:00.0 / 0:00.0</span>
+                
+                <input type="range" id="audio-scrubber" class="retro-scrubber" min="0" max="1000" value="0">
+                
+                <span id="audio-state-badge" class="retro-badge" style="margin-right:10px;">⏸ IDLE</span>
+                
+                <div class="retro-toggles-group">
+                    <label class="retro-toggle" title="Boucle (Loop)">
+                        <input type="checkbox" id="audio-loop-toggle">
+                        <span class="retro-led"></span> LOOP
+                    </label>
+                    <label class="retro-toggle" title="Lien avec le Filtre DSP (Param Board)">
+                        <input type="checkbox" id="audio-filter-toggle">
+                        <span class="retro-led filter-led"></span> FILTER
+                    </label>
+                </div>
+
+                <div class="retro-sliders-group">
+                    <div class="retro-fader-wrap" title="Volume">
+                        <input type="range" id="audio-vol-slider" class="retro-fader" min="0" max="1" step="0.01" value="1.0">
+                        <span class="fader-lbl">VOL</span>
+                    </div>
+                    <div class="retro-fader-wrap" title="Speed">
+                        <input type="range" id="audio-spd-slider" class="retro-fader" min="0.5" max="2" step="0.05" value="1.0">
+                        <span class="fader-lbl">SPD</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fusion monitor (top half) -->
+        <section style="flex:1; padding:0.6rem; padding-bottom:0.3rem; display:flex; flex-direction:column; min-height:0;">
+            <div class="panel relative" id="fusion-panel-container" style="flex:1; overflow:hidden;">
+                <div id="plot-fusion" style="width:100%; height:100%; z-index:1;"></div>
+                <canvas id="fusion-eq-canvas" class="absolute full-w full-h" style="top:0; left:0; z-index:2; pointer-events:none; display:none; mix-blend-mode: screen;"></canvas>
+            </div>
+        </section>
+
+        <!-- Raw telemetry (bottom half) -->
+        <section style="flex:1; padding:0.6rem; padding-top:0.3rem; display:flex; flex-direction:column; min-height:0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.3rem; padding:0 4px;">
+                <span class="mono" style="font-size:0.55rem; color:var(--text-dim); letter-spacing:0.13em;">
+                    ◉ RAW TELEMETRY FEEDS
+                </span>
+            </div>
+            <div style="flex:1; display:grid; grid-template-columns:repeat(4,1fr); gap:0.5rem; min-height:0;">
+                <div class="panel">
+                    <span class="panel-label"><span class="num">①</span>TEMPOREL s(t)</span>
+                    <div id="plot-raw-time" style="width:100%; height:100%;"></div>
+                </div>
+                <div class="panel">
+                    <span class="panel-label"><span class="num">②</span>AMPLITUDE |S(f)|</span>
+                    <div id="plot-raw-mag" style="width:100%; height:100%;"></div>
+                </div>
+                <div class="panel">
+                    <span class="panel-label"><span class="num">③</span>PHASE φ(f)</span>
+                    <div id="plot-raw-phase" style="width:100%; height:100%;"></div>
+                </div>
+                <div class="panel">
+                    <span class="panel-label"><span class="num">④</span>ENROULEMENT 2D</span>
+                    <div id="plot-raw-circle" style="width:100%; height:100%;"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bottom formula strip -->
+        <div id="formula-strip">
+            <span class="strip-formula" id="strip-time-wrap">
+                <span class="lbl">s(t)</span>
+                <span id="strip-time" style="color:var(--accent-blue)"></span>
+            </span>
+            <span class="strip-sep">|</span>
+            <span class="strip-formula" id="strip-freq-wrap">
+                <span class="lbl">S(f)</span>
+                <span id="strip-freq" style="color:var(--accent-cyan)"></span>
+            </span>
+            <span class="strip-sep">|</span>
+            <span class="strip-formula">
+                <span class="lbl">H(f)</span>
+                <span id="strip-filter" style="color:var(--accent-red)"></span>
+            </span>
+            <span id="tau-line"></span>
+        </div>
+    </main>
+
+    <!-- Main entry point (ES6 modules) -->
+    <!--
+        The dev_server.py at the toolbox root sends Cache-Control: no-store on
+        all responses, so sub-module caching (debt #1) is fixed at the server.
+        The ?v= query is kept for static hosts that don't disable caching.
+    -->
+    <script type="module">
+        import(`./js/main.js?v=${Date.now()}`);
+    </script>
+</body>
+</html>
