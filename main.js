@@ -5,6 +5,7 @@ function createWindow () {
   const win = new BrowserWindow({
     width: 1280,
     height: 800,
+    show: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false
@@ -13,6 +14,8 @@ function createWindow () {
   });
 
   win.loadFile(path.join(__dirname, 'Maths', 'index.html'));
+  win.maximize();
+  win.show();
 }
 
 app.whenReady().then(() => {
