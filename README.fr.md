@@ -54,8 +54,8 @@ npm run dist:linux  # Pour Linux
 ```
 Votre installeur compilé sera disponible dans le dossier `dist/`.
 
-### 4. Outil CLI (Ligne de commande)
-Lancez l'interface de l'application directement depuis votre terminal :
+### 4. Serveur Web Local (Sans Electron)
+Si vous préférez ne pas utiliser Electron, vous pouvez lancer un serveur HTTP local léger qui sert l'application directement dans votre navigateur web par défaut :
 ```bash
 npm run cli
 ```

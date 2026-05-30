@@ -4,21 +4,29 @@
 
 > "Tell me and I forget, teach me and I may remember, involve me and I learn." — Benjamin Franklin
 
-When I started studying Electrical Engineering and Industrial IT (GEII), I wanted to find out how to truly visualize complex concepts. How does one person wrap their head around Fourier transforms, Root Locus, and Kinematics without just staring at static textbook pages? 
+When I started studying Electrical Engineering and Industrial IT (GEII), I wanted to find out how to truly visualize complex concepts. How does one person wrap their head around Fourier transforms, Root Locus, and Kinematics without just staring at static textbook pages? 😪 
 
-[SOUFI Soufiane](https://github.com/SOUFISoufiane) Here. I've spent 2 full-time years navigating through dense applied mathematics and physics, going from the analogical world to the digital world, passing through filters, control systems, signal processing, to Fourier and Z transforms. Through the years, I have discovered that I learn 10x better by linking the theoretical dry world with the visual world by using drawings, schématisation, and even my own Imagination, but drawings and schemas are put in a folder and forgotten, Imagination lasts for minutes, but I know that code lasts forever. So I decided to create an interactive tools to help myself visualizing and understanding the concepts and also memorise my months of hard work and studying with easy access to close the memory gap, and surprisingly, I'm learning more effectively than I ever have, I can recall things much faster, apply a TD exercice (theoretical) into a visual simulation and validate my reasoning, then never forget it again. In the last few months I have gathered all of that, and built a production-grade interactive modules, entirely visual, running on simulations, covering the core GEII curriculum, but it will grow into engineering as I grow. Tailored on logical understanding not rote memorization as the point isn't how many pages you read, it's what you truly understand.
+[SOUFI Soufiane](https://github.com/SOUFISoufiane) here. Over the past two years, I've navigated through the dense worlds of applied mathematics and physics, bridging the gap between analog and digital systems through filters, control theory, signal processing, and Fourier transforms. Along the way, I realized I learn 10x better by connecting dry theory to visual concepts.
+
+While drawings get filed away and imagination fades in minutes, code lasts forever. I built these interactive tools to visualize complex concepts, capture months of hard work, and close my own memory gaps. Surprisingly, it worked better than I ever expected. I can now recall concepts instantly, plug a theoretical exercise into a visual simulation to validate my reasoning, and never forget it again. 
+
+Recently, I consolidated everything into these production grade, simulation driven modules. They currently cover the core GEII curriculum, but will expand into broader engineering topics as I grow. This is tailored for logical understanding, not rote memorization because the point isn't how many pages you read, it's what you truly understand.
 
 Same student. Different era. The difference is the tooling.
 
-**GEII Visual Toolbox was my solution.** It turns abstract equations into a virtual engineering lab—an oscilloscope that reacts in real-time, a circuit simulator that instantly shows Thévenin equivalents, a digital logic board that dynamically updates Karnaugh maps, and a robotic arm that moves as you tweak coordinates and parameters. Six specialized modules (more incoming000), all interactive, all built with web technologies, all free, MIT license.
+**GEII Visual Toolbox is the solution.** It transforms abstract equations into a frictionless virtual engineering lab. Whether you're a student simulating a circuit, a maker analyzing a signal, or a self-taught developer exploring robotic kinematics, this toolbox adapts to you. It features an oscilloscope that reacts in real-time, a circuit simulator that calculates Thévenin equivalents instantly, digital logic boards that dynamically solve Karnaugh maps, and a 6-axis robotic arm that responds to your coordinate tweaks. 
 
-This is my open source educational factory. I use it every day. I'm sharing it because first I know so many amazing people can add on to this project and make it even greater and that could help out even another student, and second this could be a good legacy and a good memory of my hard work and dedication during my years in IUT.
+Six specialized modules (with more on the way), all highly interactive, built with modern web technologies, and 100% open-source.
+
+This is my open source educational factory. I use it every day. I'm sharing it because first, I know the community can build upon this to make it even greater for other students, and second, because it stands as a legacy to my hard work and dedication during my time at the IUT.
 
 Fork it. Improve it. Make it yours 😊
 
 **Who this is for:**
-- **Students** — especially those who need to *see* it to understand it.
-- **Curious Minds** — anyone wanting to understand signal processing, control systems, and electronics.
+- **Visual Learners & Students** — Especially those who need to *see* it to truly understand it.
+- **Hardware Hackers & Makers** — Anyone building DIY electronics who needs to quickly simulate circuits or digital logic (in development...).
+- **Self-Taught Engineers** — Those looking for practical, interactive ways to grasp complex control systems and kinematics (in development...).
+- **Teachers** — Teachers looking for interactive virtual labs to popularize abstract theories for a younger audience.
 
 ## Quick start
 
@@ -54,8 +62,8 @@ npm run dist:linux  # For Linux
 ```
 Your compiled installer will be available in the `dist/` folder.
 
-### 4. CLI Tool
-Run the application interface directly from your command line:
+### 4. Local Web Server (No Electron)
+If you prefer not to use Electron, you can spin up a lightweight local HTTP server that serves the app directly to your default web browser:
 ```bash
 npm run cli
 ```
