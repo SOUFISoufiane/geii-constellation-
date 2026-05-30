@@ -4,21 +4,21 @@
 
 > "Dis-le-moi et je l'oublierai, enseigne-le-moi et je m'en souviendrai peut-être, implique-moi et j'apprendrai." — Benjamin Franklin
 
-Quand j'ai commencé mes études en Génie Électrique et Informatique Industrielle (GEII), je voulais trouver comment véritablement visualiser des concepts complexes. Comment peut-on comprendre les transformées de Fourier, les lieux des racines et la cinématique sans se contenter de fixer les pages statiques d'un manuel ? 😪
+Quand j'ai commencé mes études en Génie Électrique et Informatique Industrielle (GEII), je voulais trouver comment véritablement visualiser les concepts complexes qu'on voyait chaque jour. Comment peut-on comprendre les transformées de Fourier, les lieux des racines et la cinématique sans se contenter de se fixer sur les pages d'un livret de maths ? 😪
 
-Ici [SOUFI Soufiane](https://github.com/SOUFISoufiane). Ces deux dernières années, j'ai navigué à travers les mondes denses des mathématiques appliquées et de la physique, faisant le pont entre les systèmes analogiques et numériques à travers les filtres, la théorie du contrôle, le traitement du signal, et les transformées de Fourier. En chemin, j'ai réalisé que j'apprends 10 fois mieux en reliant la théorie aride aux concepts visuels.
+Je suis [SOUFI Soufiane](https://github.com/SOUFISoufiane). Ces deux dernières années, j'ai navigué à travers les mondes denses des mathématiques et de la physique appliquées, faisant le pont entre les systèmes analogiques et numériques à travers les filtres, la théorie du contrôle, le traitement du signal, et les transformées de Fourier. En chemin, j'ai réalisé que j'apprends 10 fois mieux en reliant la théorie aux concepts visuels.
 
 Si les dessins finissent classés et si l'imagination s'estompe en quelques minutes, le code, lui, dure éternellement. J'ai construit ces outils interactifs pour visualiser des concepts complexes, capturer des mois de travail acharné, et combler mes propres lacunes de mémoire. Étonnamment, cela a mieux fonctionné que je ne l'aurais jamais imaginé. Je peux maintenant me remémorer les concepts instantanément, intégrer un exercice théorique dans une simulation visuelle pour valider mon raisonnement, et ne plus jamais l'oublier.
 
-Récemment, j'ai tout consolidé dans ces modules interactifs de qualité production, basés sur des simulations. Ils couvrent actuellement le programme de base du GEII, mais s'étendront à des sujets d'ingénierie plus vastes au fur et à mesure de ma progression. Ceci est conçu pour la compréhension logique et non pour l'apprentissage par cœur, car l'important n'est pas le nombre de pages que vous lisez, c'est ce que vous comprenez vraiment.
+Récemment, j'ai tout consolidé dans ces modules interactifs, basés sur des simulations. Ils couvrent actuellement le programme de base du GEII, mais s'étendront à des sujets d'ingénierie plus vastes au fur et à mesure de ma progression. Ceci est conçu pour la compréhension logique et non pour l'apprentissage par cœur, car l'important n'est pas le nombre de pages que vous lisez, c'est ce que vous comprenez vraiment.
 
 Même étudiant. Époque différente. La différence, ce sont les outils.
 
-**GEII Visual Toolbox est la solution.** Il transforme des équations abstraites en un laboratoire d'ingénierie virtuel fluide. Que vous soyez un étudiant simulant un circuit, un maker analysant un signal, ou un développeur autodidacte explorant la cinématique robotique, cette boîte à outils s'adapte à vous. Elle comprend un oscilloscope qui réagit en temps réel, un simulateur de circuits qui calcule les équivalents de Thévenin instantanément, des cartes logiques numériques qui résolvent dynamiquement les tableaux de Karnaugh, et un bras robotique à 6 axes qui répond aux modifications de vos coordonnées.
+**GEII Visual Toolbox étais ma solution.** Il transforme des équations abstraites en un laboratoire virtuel fluide. Que vous soyez un étudiant simulant un circuit, un maker analysant un signal, ou un développeur autodidacte explorant la cinématique robotique, cette boîte à outils s'adapte à vous. Elle comprend un oscilloscope qui réagit en temps réel, un simulateur de circuits qui calcule les équivalents de Thévenin instantanément, des cartes logiques numériques qui résolvent dynamiquement les tableaux de Karnaugh, et un bras robotique à 6 axes qui répond aux modifications de vos coordonnées.
 
-Six modules spécialisés (d'autres sont à venir), tous hautement interactifs, construits avec des technologies web modernes, et 100% open source.
+Six modules spécialisés (d'autres sont à venir), tous hautement interactifs, construits avec des technologies web modernes.
 
-Ceci est mon usine éducative open source. Je l'utilise tous les jours. Je la partage car premièrement, je sais que la communauté peut s'appuyer dessus pour la rendre encore plus formidable pour d'autres étudiants, et deuxièmement, parce qu'elle témoigne de mon travail acharné et de mon dévouement durant mon passage à l'IUT.
+Ceci est mon usine éducative open source. Je l'utilise tous les jours. Je la partage car premièrement, je sais que d'autres personnes peuvent s'en servir pour l'améliorer pour d'autres étudiants, et deuxièmement, parce qu'elle fait partie du témoignage de mon acharnement et de mon investissement durant mon passage à l'IUT.
 
 Forkez-le. Améliorez-le. Appropriez-le-vous 😊
 

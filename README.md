@@ -23,17 +23,17 @@ This is my open source educational factory. I use it every day. I'm sharing it b
 Fork it. Improve it. Make it yours 😊
 
 **Who this is for:**
-- **Visual Learners & Students** — Especially those who need to *see* it to truly understand it.
-- **Hardware Hackers & Makers** — Anyone building DIY electronics who needs to quickly simulate circuits or digital logic (in development...).
-- **Self-Taught Engineers** — Those looking for practical, interactive ways to grasp complex control systems and kinematics (in development...).
-- **Teachers** — Teachers looking for interactive virtual labs to popularize abstract theories for a younger audience.
+- **Visual Learners & Students** — Especially those who need to *see* it to truly understand it (status : completed basic visualisations, grows as I grow).
+- **Hardware Hackers & Makers** — Anyone building DIY electronics who needs to quickly simulate circuits or digital logic (status in continuous improvement...).
+- **Self-Taught Builders** — Those looking for practical, interactive ways to grasp complex control systems and kinematics (status in continuous improvement...).
+- **Teachers** — Teachers looking for interactive virtual labs to popularize abstract theories for a younger audience (status in continuous improvement...).
 
 ## Quick start
 
 1. Install the GEII Visual Toolbox (30 seconds — see below)
 2. Open **Signal Observatory** — visualize live audio and Fourier transforms.
 3. Open **Automatique (Servo Lab)** — plot Root Locus and Bode diagrams dynamically.
-4. Explore the **Knowledge Base (My2ndBrain)** — read the SOPs and study notes.
+4. Explore the **Knowledge Base** — read the SOPs and study notes.
 5. Stop there. You'll know if this is for you.
 
 ## Installation Options
@@ -85,10 +85,10 @@ The GEII Visual Toolbox is a suite of interactive applications. Each module is d
 
 Code and visualizations are only half the battle. The other half is the theory.
 
-This repository includes a central Knowledge Base (KB) for all theoretical concepts seamlessly integrated into the application.
+This repository includes a central Knowledge Base (KB) for all theoretical concepts seamlessly integrated into the application, you can find it in the homepage.
 
 Inside, you'll find:
-- **Concepts & Entities:** Deep-dives into Fourier series, Laplace transforms, and more.
+- **Concepts & Entities:** Visual-dives into Fourier series, Laplace transforms, filters on a wide range of signals and equations,and more.
 - **SOPs (Standard Operating Procedures):** Step-by-step guides on how to approach engineering problems.
 - **Token Optimization Logs:** Records of how this knowledge base is maintained and optimized.
 
