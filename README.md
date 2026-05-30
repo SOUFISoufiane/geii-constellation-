@@ -1,5 +1,7 @@
 # GEII Visual Toolbox (geii-constellation)
 
+*[Lire en français](README.fr.md)*
+
 > "Tell me and I forget, teach me and I may remember, involve me and I learn." — Benjamin Franklin
 
 When I started studying Electrical Engineering and Industrial IT (GEII), I wanted to find out how to truly visualize complex concepts. How does one person wrap their head around Fourier transforms, Root Locus, and Kinematics without just staring at static textbook pages? 
