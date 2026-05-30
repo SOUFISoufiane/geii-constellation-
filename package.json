@@ -2,7 +2,7 @@
   "name": "geii-visual-toolbox",
   "version": "1.0.0",
   "description": "Interactive visual learning suite for electrical engineering and signal processing.",
-  "main": "electron.js",
+  "main": "main.js",
   "bin": {
     "geii-visual-toolbox": "./bin/cli.js"
   },
@@ -22,7 +22,7 @@
     },
     "files": [
       "Maths/**/*",
-      "electron.js",
+      "main.js",
       "package.json"
     ],
     "win": {
