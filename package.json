@@ -1,0 +1,44 @@
+{
+  "name": "geii-visual-toolbox",
+  "version": "1.0.0",
+  "description": "Interactive visual learning suite for electrical engineering and signal processing.",
+  "main": "electron.js",
+  "bin": {
+    "geii-visual-toolbox": "./bin/cli.js"
+  },
+  "scripts": {
+    "start": "electron .",
+    "cli": "node ./bin/cli.js",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.geii.visualtoolbox",
+    "productName": "GEII Visual Toolbox",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "Maths/**/*",
+      "electron.js",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
+  },
+  "author": "GEII Visual Toolbox Authors",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electron-builder": "^24.13.3"
+  }
+}
