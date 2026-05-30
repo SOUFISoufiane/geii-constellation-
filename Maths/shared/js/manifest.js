@@ -94,7 +94,7 @@ export const APPS = {
     'circuits': {
         name: 'Circuits Interactifs',
         tagline: 'Kirchhoff · Thévenin · RLC',
-        icon: '⚡',
+        icon: '<img src="shared/img/logo_ese.png" style="width: 28px; height: 28px; border-radius: 6px; vertical-align: middle; box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);">',
         status: 'stable',
         concept: 'circuits-analog',
         matieres: ['Électronique'],
@@ -104,7 +104,7 @@ export const APPS = {
     'automatique': {
         name: 'Servo Lab',
         tagline: 'PID · Lieu des racines · Bode',
-        icon: '⟲',
+        icon: '<img src="shared/img/logo_aii.png" style="width: 28px; height: 28px; border-radius: 6px; vertical-align: middle; box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);">',
         status: 'stable',
         concept: 'systems-control',
         matieres: ['Automatique S4', 'Maths'],
@@ -114,7 +114,7 @@ export const APPS = {
     'numerique': {
         name: 'Digital Lab',
         tagline: 'Karnaugh · VHDL · Table de vérité',
-        icon: '01',
+        icon: '<img src="shared/img/logo_ese.png" style="width: 28px; height: 28px; border-radius: 6px; vertical-align: middle; box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);">',
         status: 'stable',
         concept: 'digital-logic',
         matieres: ['Élec. numérique'],
@@ -134,7 +134,7 @@ export const APPS = {
     'robotique': {
         name: 'Robotique',
         tagline: 'Bras 2R/6R · Rotations · Repères',
-        icon: '🦾',
+        icon: '<img src="shared/img/logo_aii.png" style="width: 28px; height: 28px; border-radius: 6px; vertical-align: middle; box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);">',
         status: 'stable',
         concept: 'robotics',
         matieres: ['Robotique industrielle'],

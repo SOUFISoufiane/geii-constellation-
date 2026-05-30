@@ -6,7 +6,7 @@
 
 When I started studying Electrical Engineering and Industrial IT (GEII), I wanted to find out how to truly visualize complex concepts. How does one person wrap their head around Fourier transforms, Root Locus, and Kinematics without just staring at static textbook pages? 
 
-I'm [SOUFI Soufiane](https://github.com/SOUFISoufiane), and I built this. I've spent countless hours navigating through dense mathematics and physics, and right now I'm learning more effectively than I ever have. In the last few months: 6 production-grade interactive modules, entirely visual, covering the core GEII curriculum. On logical understanding—not rote memorization—my learning pace is **exponentially faster**. Year-to-date, this visual approach has produced **10× the clarity** of traditional studying. The point isn't how many pages you read, it's what you truly understand.
+I'm [SOUFI Soufiane](https://github.com/SOUFISoufiane), and I built this. I've spent 2 full-time years navigating through dense mathematics and physics, and right now I'm learning more effectively than I ever have. In the last few months: 6 production-grade interactive modules, entirely visual, covering the core GEII curriculum. On logical understanding—not rote memorization—my learning pace is **exponentially faster**. Year-to-date, this visual approach has produced **10× the clarity** of traditional studying. The point isn't how many pages you read, it's what you truly understand.
 
 Same student. Different era. The difference is the tooling.
 

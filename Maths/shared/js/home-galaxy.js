@@ -30,9 +30,12 @@ export function mountHomeGalaxy(root = document.body) {
         <div class="vignette"></div>
 
         <header class="home-header">
-            <div class="home-logo">
-                <div class="title">${TOOLBOX.name}</div>
-                <div class="sub">${TOOLBOX.tagline}</div>
+            <div class="home-logo" style="display: flex; align-items: center; gap: 15px;">
+                <img src="shared/img/geii_main.png" alt="GEII Logo" style="height: 52px; width: auto; border-radius: 8px; box-shadow: 0 0 20px rgba(0,210,255,0.2);">
+                <div>
+                    <div class="title">${TOOLBOX.name}</div>
+                    <div class="sub">${TOOLBOX.tagline}</div>
+                </div>
             </div>
             <div class="home-controls">
                 <input class="home-search" id="home-search" type="search"
