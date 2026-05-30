@@ -45,6 +45,12 @@
     /* — VFX CONTROLS — */
     --bloom-intensity: 1.0;
     --scanline-opacity: 0.012;
+
+    /* — EQUALIZER COLORS — */
+    --eq-hue-start: 260;   /* Deep blue/purple */
+    --eq-hue-end: 0;       /* Magenta/Red */
+    --eq-saturation: 100%;
+    --eq-lightness: 60%;
 }
 
 /* ─── THEMES ────────────────────────────────────────────────────── */
@@ -77,6 +83,11 @@ body.theme-amber {
     --domain-electrical: #ffb000;
     --domain-ai:         #ffb000;
     --domain-automation: #ffb000;
+
+    --eq-hue-start: 40;    /* Amber/Gold */
+    --eq-hue-end: 15;      /* Deep Orange */
+    --eq-saturation: 100%;
+    --eq-lightness: 50%;
 }
 
 /* SOLARIZED — Scientific High-Contrast */
@@ -102,6 +113,11 @@ body.theme-solarized {
     --text-mid:    #839496;
     --text-bright: #eee8d5;
     --text-glow:   #fdf6e3;
+
+    --eq-hue-start: 175;   /* Cyan */
+    --eq-hue-end: 330;     /* Magenta */
+    --eq-saturation: 65%;
+    --eq-lightness: 55%;
 }
 
 /* PRINT MODE — Clean white for PDF export/printing */

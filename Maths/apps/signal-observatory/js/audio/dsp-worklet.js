@@ -84,6 +84,9 @@ class DSPWorkletProcessor extends AudioWorkletProcessor {
         this._fftSize = 2048;
         this._windowType = 'hann';
         this._window = makeWindow('hann', 2048);
+        this._smoothingTimeConstant = 0.8;
+        this._previousMagnitude = new Float32Array(this._fftSize >> 1);
+        this._previousMagnitude.fill(-100); // Initialize to silence (-100dB)
 
         // Ring buffer for accumulating samples
         this._buffer = new Float32Array(this._fftSize);
@@ -102,6 +105,8 @@ class DSPWorkletProcessor extends AudioWorkletProcessor {
                     this._hopSize = this._fftSize >> 1;
                     this._samplesSinceLastFrame = 0;
                     this._window = makeWindow(this._windowType, this._fftSize);
+                    this._previousMagnitude = new Float32Array(this._fftSize >> 1);
+                    this._previousMagnitude.fill(-100);
                 }
                 if (msg.windowType && msg.windowType !== this._windowType) {
                     this._windowType = msg.windowType;
@@ -146,15 +151,25 @@ class DSPWorkletProcessor extends AudioWorkletProcessor {
                 re[i] = this._buffer[idx] * this._window[i];
             }
 
+            // Copy time domain BEFORE in-place FFT destroys it
+            const timeBuffer = new Float32Array(re);
+
             fftInPlace(re, im);
 
             // Compute magnitude in dB for the first N/2 bins
             const nBins = N >> 1;
             const magnitude = new Float32Array(nBins);
             const phase = new Float32Array(nBins);
+            const alpha = this._smoothingTimeConstant;
+
             for (let k = 0; k < nBins; k++) {
                 const mag = Math.sqrt(re[k] * re[k] + im[k] * im[k]);
-                magnitude[k] = 20 * Math.log10(mag + 1e-10);
+                const currentDB = 20 * Math.log10(mag + 1e-10);
+                
+                // Temporal Smoothing
+                magnitude[k] = (alpha * this._previousMagnitude[k]) + ((1 - alpha) * currentDB);
+                this._previousMagnitude[k] = magnitude[k];
+                
                 phase[k] = Math.atan2(im[k], re[k]);
             }
 
@@ -163,8 +178,9 @@ class DSPWorkletProcessor extends AudioWorkletProcessor {
                 type: 'fft-frame',
                 magnitude: magnitude.buffer,
                 phase: phase.buffer,
+                timeDomain: timeBuffer.buffer,
                 timestamp: currentTime
-            }, [magnitude.buffer, phase.buffer]);
+            }, [magnitude.buffer, phase.buffer, timeBuffer.buffer]);
         }
 
         return true; // keep processor alive

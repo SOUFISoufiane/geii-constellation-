@@ -23,7 +23,7 @@ Applies to `Maths/apps/signal-observatory/`. Key folders under `js/`:
    Add a mode by extending the dropdown in `index.html` and the dispatcher. Mode 14 (Audio DSP) bypasses standard processing in favor of its own multithreaded pipeline in `main.js`.
 2. **Signals**: defined in the `math/` catalogues; derivations (formula panel) in
    `derivations/`. Keep a signal's derivation in sync with its definition.
-3. **Audio Engine**: uses an `AudioContext` and an `AudioWorkletNode` (`dsp-worklet.js`) to offload FFT computations via `postMessage`.
+3. **Audio Engine**: uses an `AudioContext` and an `AudioWorkletNode` (`dsp-worklet.js`) to offload FFT computations via `postMessage`. It employs zero-copy streaming via an `<audio>` tag (`MediaElementAudioSourceNode`) for playback to save RAM, and uses a custom `DataView` parser to stream `.wav` files in 1MB chunks for offline spectrogram generation. Temporal smoothing is applied inside the worklet to prevent visual jitter.
 4. **Theme-aware colors**: never hardcode hex — read via the `PALETTE` Proxy in
    `plotly-config.js` (resolves CSS vars from `document.body` so themes propagate).
 5. **State**: `state.js` is a pub/sub store; UI reads/writes through it. (Audio mode uses its own `audioAnalyzerState` in `file-audio-engine.js`).

@@ -8,6 +8,7 @@ import {
     baseLayout, baseLayoutLegend, axisTitle,
     PALETTE, COSMIC_COLORSCALE, PLOTLY_CONFIG, getFont
 } from './plotly-config.js';
+import { renderEqCanvas, stopEqCanvas } from './eq-canvas.js';
 
 // ─── Peak detection for the oscilloscope overlay ────────────────────
 function detectTransients(pcm, sr, thresholdRMS = 0.15) {
@@ -67,7 +68,7 @@ export function renderAudioAnalyzer() {
     const s = audioAnalyzerState;
 
     if (s.engineState === AudioState.IDLE) {
-        _renderUploadPlaceholder();
+        _renderUploadPlaceholder(s);
         return;
     }
     if (s.engineState === AudioState.DECODING) {
@@ -80,25 +81,45 @@ export function renderAudioAnalyzer() {
     _renderTelemetryPanels(s);
 }
 
-// ─── Upload placeholder (fusion panel) ─────────────────────────────
-function _renderUploadPlaceholder() {
+// ─── Upload / Streaming placeholder (fusion panel) ─────────────────────────────
+function _renderUploadPlaceholder(s) {
+    const isStreamingReady = s && s.engineState !== AudioState.IDLE && s.fileName;
+    
+    if (isStreamingReady) {
+        renderEqCanvas(s);
+    } else {
+        stopEqCanvas();
+    }
+
+    // Only render the text annotation if we are idle or not playing (if playing, EQ takes over)
+    const showText = !isStreamingReady || s.engineState !== AudioState.PLAYING;
+    const msg = isStreamingReady
+        ? `🎵 <b>${s.fileName}</b> chargé (Streaming).<br>Appuyez sur ▶ PLAY pour l'analyse en temps réel.`
+        : `🎵 Glissez un fichier audio ici<br>ou cliquez pour charger<br><span style="font-size:0.7em;color:${PALETTE.textDim}">WAV · MP3 · OGG · FLAC</span>`;
+
     const layout = baseLayout({
         xaxis: { visible: false },
         yaxis: { visible: false },
-        annotations: [{
-            text: '🎵 Glissez un fichier audio ici<br>ou cliquez pour charger<br><span style="font-size:0.7em;color:' + PALETTE.textDim + '">WAV · MP3 · OGG · FLAC</span>',
+        annotations: showText ? [{
+            text: msg,
             showarrow: false,
             font: { size: 16, color: PALETTE.textMid, family: 'Space Mono, monospace' },
             xref: 'paper', yref: 'paper', x: 0.5, y: 0.5
-        }]
+        }] : []
     });
+    
+    // We clear the plotly traces, the canvas sits on top
     Plotly.react('plot-fusion', [], layout, PLOTLY_CONFIG);
-    // Clear telemetry panels
-    _clearTelemetry();
+    
+    // Clear telemetry panels only if actually idle
+    if (!isStreamingReady) {
+        _clearTelemetry();
+    }
 }
 
 // ─── Decoding skeleton (fusion panel) ──────────────────────────────
 function _renderDecodingSkeleton() {
+    stopEqCanvas();
     const layout = baseLayout({
         xaxis: { visible: false },
         yaxis: { visible: false },
@@ -118,9 +139,11 @@ function _renderFusionPanel(s) {
     const { spectrogram, spectrogramTimestamps, sampleRate, fftSize, currentTime, duration } = s;
 
     if (!spectrogram || spectrogram.length === 0) {
-        _renderUploadPlaceholder();
+        _renderUploadPlaceholder(s);
         return;
     }
+
+    stopEqCanvas();
 
     const nBins = fftSize >> 1;
     const nyquist = sampleRate / 2;
@@ -235,11 +258,15 @@ function _renderFusionPanel(s) {
 
 // ─── Telemetry panels (oscilloscope, spectrum snapshot, phase, stats) ─
 function _renderTelemetryPanels(s) {
-    const { pcmData, sampleRate, currentTime, fftSize, spectrogram, spectrogramTimestamps } = s;
-    if (!pcmData) return;
+    const { pcmData, sampleRate, currentTime, fftSize, spectrogram, spectrogramTimestamps, lastFrame } = s;
+    if (!pcmData && (!lastFrame || !lastFrame.timeDomain)) return;
 
     // ① Oscilloscope — time-domain waveform
-    _renderOscilloscope(pcmData, sampleRate, currentTime);
+    if (pcmData) {
+        _renderOscilloscope(pcmData, sampleRate, currentTime);
+    } else if (lastFrame && lastFrame.timeDomain) {
+        _renderOscilloscopeStreaming(lastFrame.timeDomain, sampleRate, currentTime);
+    }
 
     // ② Spectrum snapshot at current playhead time
     _renderSpectrumSnapshot(s);
@@ -249,6 +276,44 @@ function _renderTelemetryPanels(s) {
 
     // ④ Winding / Statistics panel
     _renderAudioStats(s);
+}
+
+function _renderOscilloscopeStreaming(timeDomain, sr, currentTime) {
+    const t = [];
+    const y = [];
+    const N = timeDomain.length;
+    // Current time represents the end of the window (approx)
+    const startT = Math.max(0, currentTime - (N / sr));
+    
+    let rms = 0;
+    for (let i = 0; i < N; i++) {
+        t.push(startT + (i / sr));
+        y.push(timeDomain[i]);
+        rms += timeDomain[i] * timeDomain[i];
+    }
+    rms = Math.sqrt(rms / N);
+
+    // Normalize intensity (RMS ~0.2 is very loud)
+    const intensity = Math.min(1, rms * 4);
+    const styles = getComputedStyle(document.body);
+    const hStart = parseFloat(styles.getPropertyValue('--eq-hue-start').trim()) || 260;
+    const hEnd = parseFloat(styles.getPropertyValue('--eq-hue-end').trim()) || 0;
+    const dynHue = hStart + intensity * (hEnd - hStart);
+    const dynColor = `hsl(${dynHue}, 100%, 65%)`;
+
+    const traces = [{
+        x: t, y, type: 'scattergl', mode: 'lines',
+        line: { color: dynColor, width: 1.5 },
+        fill: 'tozeroy', fillcolor: `hsla(${dynHue}, 100%, 65%, 0.1)`,
+        name: 'PCM'
+    }];
+
+    const layout = baseLayout({
+        xaxis: { ...baseLayout().xaxis, title: axisTitle('t (s)') },
+        yaxis: { ...baseLayout().yaxis, title: axisTitle('Amplitude'), range: [-1.05, 1.05] }
+    });
+
+    Plotly.react('plot-raw-time', traces, layout, PLOTLY_CONFIG);
 }
 
 function _renderOscilloscope(pcm, sr, currentTime) {
@@ -261,10 +326,21 @@ function _renderOscilloscope(pcm, sr, currentTime) {
 
     const t = [];
     const y = [];
+    let rms = 0;
     for (let i = start; i < end; i++) {
         t.push(i / sr);
         y.push(pcm[i]);
+        rms += pcm[i] * pcm[i];
     }
+    const winLen = end - start;
+    if (winLen > 0) rms = Math.sqrt(rms / winLen);
+
+    const intensity = Math.min(1, rms * 4);
+    const styles = getComputedStyle(document.body);
+    const hStart = parseFloat(styles.getPropertyValue('--eq-hue-start').trim()) || 260;
+    const hEnd = parseFloat(styles.getPropertyValue('--eq-hue-end').trim()) || 0;
+    const dynHue = hStart + intensity * (hEnd - hStart);
+    const dynColor = `hsl(${dynHue}, 100%, 65%)`;
 
     // Peak detection for transient overlay
     const transients = detectTransients(pcm, sr);
@@ -274,8 +350,8 @@ function _renderOscilloscope(pcm, sr, currentTime) {
 
     const traces = [{
         x: t, y, type: 'scattergl', mode: 'lines',
-        line: { color: PALETTE.blue, width: 1.5 },
-        fill: 'tozeroy', fillcolor: 'rgba(79,140,255,0.08)',
+        line: { color: dynColor, width: 1.5 },
+        fill: 'tozeroy', fillcolor: `hsla(${dynHue}, 100%, 65%, 0.1)`,
         name: 'PCM'
     }];
 
@@ -311,24 +387,33 @@ function _renderOscilloscope(pcm, sr, currentTime) {
 }
 
 function _renderSpectrumSnapshot(s) {
-    const { spectrogram, spectrogramTimestamps, sampleRate, fftSize, currentTime } = s;
-    if (!spectrogram || spectrogram.length === 0) return;
+    const { spectrogram, spectrogramTimestamps, sampleRate, fftSize, currentTime, lastFrame } = s;
+    let magData = null;
+    let nBins = 0;
 
-    // Find nearest frame to currentTime
-    let bestIdx = 0;
-    let bestDist = Infinity;
-    for (let i = 0; i < spectrogramTimestamps.length; i++) {
-        const d = Math.abs(spectrogramTimestamps[i] - currentTime);
-        if (d < bestDist) { bestDist = d; bestIdx = i; }
+    if (spectrogram && spectrogram.length > 0) {
+        // Find nearest offline frame
+        let bestIdx = 0;
+        let bestDist = Infinity;
+        for (let i = 0; i < spectrogramTimestamps.length; i++) {
+            const d = Math.abs(spectrogramTimestamps[i] - currentTime);
+            if (d < bestDist) { bestDist = d; bestIdx = i; }
+        }
+        const frame = spectrogram[bestIdx];
+        if (frame) {
+            magData = Array.from(frame);
+            nBins = frame.length;
+        }
+    } else if (lastFrame && lastFrame.magnitude) {
+        // Streaming fallback
+        magData = Array.from(lastFrame.magnitude);
+        nBins = lastFrame.magnitude.length;
     }
 
-    const frame = spectrogram[bestIdx];
-    if (!frame) return;
+    if (!magData) return;
 
-    const nBins = frame.length;
     const nyquist = sampleRate / 2;
     const fAxis = Array.from({ length: nBins }, (_, i) => (i / nBins) * nyquist);
-    const magData = Array.from(frame);
 
     // Find peaks
     const peakIndices = [];
@@ -343,10 +428,20 @@ function _renderSpectrumSnapshot(s) {
     peakIndices.sort((a, b) => magData[b] - magData[a]);
     const topPeaks = peakIndices.slice(0, 10);
 
+    // Generate rainbow color array based on current CSS variables
+    const styles = getComputedStyle(document.body);
+    const hStart = parseFloat(styles.getPropertyValue('--eq-hue-start').trim()) || 260;
+    const hEnd = parseFloat(styles.getPropertyValue('--eq-hue-end').trim()) || 0;
+    const colors = [];
+    for (let i = 0; i < nBins; i++) {
+        const t = i / nBins;
+        const hue = hStart + t * (hEnd - hStart);
+        colors.push(`hsl(${hue}, 100%, 60%)`);
+    }
+
     const traces = [{
-        x: fAxis, y: magData, type: 'scattergl', mode: 'lines',
-        line: { color: PALETTE.cyan, width: 1.5 },
-        fill: 'tozeroy', fillcolor: 'rgba(0,245,212,0.06)',
+        x: fAxis, y: magData, type: 'bar',
+        marker: { color: colors },
         name: '|S(f)| dB'
     }];
 

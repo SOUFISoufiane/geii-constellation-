@@ -37,7 +37,8 @@ export const audioAnalyzerState = {
 let _audioCtx   = null;
 let _sourceNode = null;
 let _workletNode = null;
-let _audioBuffer = null;
+let _audioEl     = null;
+let _blobUrl     = null;
 let _startOffset = 0;
 let _startTime   = 0;
 let _rafId       = null;
@@ -63,32 +64,169 @@ export async function loadAudioFile(file) {
     audioAnalyzerState.fileName = file.name;
     _resetSpectrogram();
 
+    if (_blobUrl) URL.revokeObjectURL(_blobUrl);
+    _blobUrl = URL.createObjectURL(file);
+
     try {
-        const arrayBuf = await file.arrayBuffer();
+        const isWav = file.name.toLowerCase().endsWith('.wav') || file.type === 'audio/wav';
+        const isTooLarge = file.size > 10 * 1024 * 1024; // >10MB
 
-        // Use a regular AudioContext for decoding — OfflineAudioContext with
-        // minimal buffer (1 sample) can fail in some browsers.
-        const tmpCtx = new (window.AudioContext || window.webkitAudioContext)();
-        _audioBuffer = await tmpCtx.decodeAudioData(arrayBuf);
-        tmpCtx.close();
+        if (isWav) {
+            await _parseWavAndChunkOfflineSpectrogram(file);
+        } else if (!isTooLarge) {
+            const arrayBuf = await file.arrayBuffer();
+            let audioBuffer = null;
+            try {
+                const tmpCtx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(1, 1, 44100);
+                audioBuffer = await tmpCtx.decodeAudioData(arrayBuf);
+            } catch (e) {
+                console.warn('[audio-engine] decodeAudioData failed, falling back to streaming:', e);
+            }
 
-        // Extract mono PCM
-        const raw = _audioBuffer.getChannelData(0);
-        audioAnalyzerState.pcmData     = raw;
-        audioAnalyzerState.sampleRate  = _audioBuffer.sampleRate;
-        audioAnalyzerState.duration    = _audioBuffer.duration;
+            if (audioBuffer) {
+                const raw = audioBuffer.getChannelData(0);
+                audioAnalyzerState.pcmData = raw;
+                audioAnalyzerState.sampleRate = audioBuffer.sampleRate;
+                audioAnalyzerState.duration = audioBuffer.duration;
+                _computeOfflineSpectrogram(raw, audioBuffer.sampleRate);
+            } else {
+                // Fallback to streaming if decoding failed but size is small
+                audioAnalyzerState.pcmData = null;
+                await _fallbackToStreaming(file);
+            }
+        } else {
+            console.warn('[audio-engine] File too large for offline spectrogram. Streaming only.');
+            audioAnalyzerState.pcmData = null;
+            await _fallbackToStreaming(file);
+        }
+
         audioAnalyzerState.currentTime = 0;
-
-        // Pre-compute offline spectrogram for the full file
-        _computeOfflineSpectrogram(raw, _audioBuffer.sampleRate);
-
         _setState(AudioState.READY);
-        console.log(`[audio-engine] Decoded "${file.name}" — ${_audioBuffer.sampleRate} Hz, ${_audioBuffer.duration.toFixed(2)}s`);
+        console.log(`[audio-engine] Decoded "${file.name}"`);
     } catch (err) {
-        console.error('[audio-engine] Decode error:', err);
+        console.error('[audio-engine] Load error:', err);
         _setState(AudioState.IDLE);
         throw err;
     }
+}
+
+async function _fallbackToStreaming(file) {
+    return new Promise((resolve, reject) => {
+        const tempAudio = new Audio(_blobUrl);
+        tempAudio.onloadedmetadata = () => {
+            audioAnalyzerState.duration = tempAudio.duration;
+            audioAnalyzerState.sampleRate = 44100; // Fallback guess
+            resolve();
+        };
+        tempAudio.onerror = (e) => {
+            reject(new Error("Audio tag failed to load metadata: " + (tempAudio.error?.message || "Unknown error")));
+        };
+    });
+}
+
+async function _parseWavAndChunkOfflineSpectrogram(file) {
+    const headerBuf = await file.slice(0, 4096).arrayBuffer();
+    const dv = new DataView(headerBuf);
+
+    if (dv.getUint32(0, false) !== 0x52494646) throw new Error("Not a RIFF file");
+    if (dv.getUint32(8, false) !== 0x57415645) throw new Error("Not a WAVE file");
+
+    let offset = 12;
+    let format = null;
+    let dataOffset = 0;
+    let dataLength = 0;
+
+    while (offset < dv.byteLength) {
+        const chunkId = dv.getUint32(offset, false);
+        const chunkSize = dv.getUint32(offset + 4, true);
+        if (chunkId === 0x666d7420) { // "fmt "
+            format = {
+                audioFormat: dv.getUint16(offset + 8, true),
+                numChannels: dv.getUint16(offset + 10, true),
+                sampleRate: dv.getUint32(offset + 12, true),
+                byteRate: dv.getUint32(offset + 16, true),
+                blockAlign: dv.getUint16(offset + 20, true),
+                bitsPerSample: dv.getUint16(offset + 22, true)
+            };
+        } else if (chunkId === 0x64617461) { // "data"
+            dataOffset = offset + 8;
+            dataLength = chunkSize;
+            break;
+        }
+        offset += 8 + chunkSize;
+    }
+
+    if (!format || !dataOffset) throw new Error("Invalid WAV header");
+
+    audioAnalyzerState.sampleRate = format.sampleRate;
+    audioAnalyzerState.duration = dataLength / format.byteRate;
+    audioAnalyzerState.pcmData = null; // Streamed mode, no full PCM array
+
+    if (format.audioFormat !== 1 && format.audioFormat !== 3) {
+        console.warn('[audio-engine] Unsupported WAV format for chunking. Skipping offline spectrogram.');
+        return;
+    }
+
+    const N = audioAnalyzerState.fftSize;
+    const hop = N >> 1;
+    const win = _makeWindow(audioAnalyzerState.windowType, N);
+    const nBins = N >> 1;
+    const bytesPerSample = format.bitsPerSample / 8;
+    const frameByteSize = format.numChannels * bytesPerSample;
+    
+    const CHUNK_SIZE = 1024 * 1024; // 1MB
+    let currentByte = dataOffset;
+    const matrix = [];
+    const timestamps = [];
+    let leftoverSamples = new Float32Array(0);
+
+    while (currentByte < dataOffset + dataLength) {
+        const endByte = Math.min(currentByte + CHUNK_SIZE, dataOffset + dataLength);
+        const chunkBuf = await file.slice(currentByte, endByte).arrayBuffer();
+        const chunkDv = new DataView(chunkBuf);
+        const numSamples = Math.floor(chunkBuf.byteLength / frameByteSize);
+        
+        const floatSamples = new Float32Array(numSamples);
+        for (let i = 0; i < numSamples; i++) {
+            let val = 0;
+            if (format.audioFormat === 1 && format.bitsPerSample === 16) {
+                val = chunkDv.getInt16(i * frameByteSize, true) / 32768.0;
+            } else if (format.audioFormat === 3 && format.bitsPerSample === 32) {
+                val = chunkDv.getFloat32(i * frameByteSize, true);
+            }
+            floatSamples[i] = val;
+        }
+        
+        const combined = new Float32Array(leftoverSamples.length + floatSamples.length);
+        combined.set(leftoverSamples, 0);
+        combined.set(floatSamples, leftoverSamples.length);
+        
+        let pos = 0;
+        let globalSamplePos = ((currentByte - dataOffset) / frameByteSize) - leftoverSamples.length;
+        
+        while (pos + N <= combined.length) {
+            const re = new Float32Array(N);
+            const im = new Float32Array(N);
+            for (let i = 0; i < N; i++) {
+                re[i] = combined[pos + i] * win[i];
+            }
+            _fftInPlace(re, im);
+            const row = new Float32Array(nBins);
+            for (let k = 0; k < nBins; k++) {
+                const mag = Math.sqrt(re[k] * re[k] + im[k] * im[k]);
+                row[k] = 20 * Math.log10(mag + 1e-10);
+            }
+            matrix.push(row);
+            timestamps.push((globalSamplePos + pos + N / 2) / format.sampleRate);
+            pos += hop;
+        }
+        
+        leftoverSamples = combined.slice(pos);
+        currentByte = endByte;
+    }
+    
+    audioAnalyzerState.spectrogram = matrix;
+    audioAnalyzerState.spectrogramTimestamps = timestamps;
 }
 
 /**
@@ -131,9 +269,8 @@ function _computeOfflineSpectrogram(pcm, sr) {
  * Start or resume playback.
  */
 export async function playAudio() {
-    if (!_audioBuffer) return;
+    if (!_blobUrl) return;
 
-    // Create context if needed
     if (!_audioCtx || _audioCtx.state === 'closed') {
         _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
@@ -141,33 +278,32 @@ export async function playAudio() {
         await _audioCtx.resume();
     }
 
-    // Try to init worklet (graceful fallback — playback works without it)
     await _initWorklet();
 
-    // Stop any previous source
-    _stopSource();
+    if (!_audioEl) {
+        _audioEl = new Audio(_blobUrl);
+        _sourceNode = _audioCtx.createMediaElementSource(_audioEl);
 
-    // Create buffer source
-    _sourceNode = _audioCtx.createBufferSource();
-    _sourceNode.buffer = _audioBuffer;
+        if (_workletNode) {
+            _sourceNode.connect(_workletNode);
+            _workletNode.connect(_audioCtx.destination);
+        } else {
+            _sourceNode.connect(_audioCtx.destination);
+        }
 
-    if (_workletNode) {
-        _sourceNode.connect(_workletNode);
-        _workletNode.connect(_audioCtx.destination);
-    } else {
-        _sourceNode.connect(_audioCtx.destination);
+        _audioEl.onended = () => {
+            if (audioAnalyzerState.engineState === AudioState.PLAYING) {
+                audioAnalyzerState.currentTime = audioAnalyzerState.duration;
+                _setState(AudioState.READY);
+                _cancelTimeTrack();
+            }
+        };
+    } else if (_audioEl.src !== _blobUrl) {
+        _audioEl.src = _blobUrl;
     }
 
-    _sourceNode.onended = () => {
-        if (audioAnalyzerState.engineState === AudioState.PLAYING) {
-            audioAnalyzerState.currentTime = audioAnalyzerState.duration;
-            _setState(AudioState.READY);
-            _cancelTimeTrack();
-        }
-    };
-
-    _startTime = _audioCtx.currentTime;
-    _sourceNode.start(0, _startOffset);
+    _audioEl.currentTime = _startOffset;
+    await _audioEl.play();
     _setState(AudioState.PLAYING);
     _startTimeTrack();
 }
@@ -177,8 +313,10 @@ export async function playAudio() {
  */
 export function pauseAudio() {
     if (audioAnalyzerState.engineState !== AudioState.PLAYING) return;
-    _startOffset = audioAnalyzerState.currentTime;
-    _stopSource();
+    if (_audioEl) {
+        _audioEl.pause();
+        _startOffset = _audioEl.currentTime;
+    }
     _cancelTimeTrack();
     _setState(AudioState.PAUSED);
 }
@@ -190,11 +328,9 @@ export function seekAudio(timeSec) {
     const t = Math.max(0, Math.min(timeSec, audioAnalyzerState.duration));
     _startOffset = t;
     audioAnalyzerState.currentTime = t;
+    if (_audioEl) _audioEl.currentTime = t;
 
-    if (audioAnalyzerState.engineState === AudioState.PLAYING) {
-        // Restart playback from new position
-        playAudio();
-    } else {
+    if (audioAnalyzerState.engineState !== AudioState.PLAYING) {
         notify();
     }
 }
@@ -203,7 +339,10 @@ export function seekAudio(timeSec) {
  * Stop and reset.
  */
 export function stopAudio() {
-    _stopSource();
+    if (_audioEl) {
+        _audioEl.pause();
+        _audioEl.currentTime = 0;
+    }
     _cancelTimeTrack();
     _startOffset = 0;
     audioAnalyzerState.currentTime = 0;
@@ -242,12 +381,19 @@ export function setWindowType(type) {
  * Cleanup everything.
  */
 export function disposeAudioEngine() {
-    _stopSource();
+    if (_audioEl) {
+        _audioEl.pause();
+        _audioEl.removeAttribute('src');
+        _audioEl = null;
+    }
+    if (_blobUrl) {
+        URL.revokeObjectURL(_blobUrl);
+        _blobUrl = null;
+    }
     _cancelTimeTrack();
     if (_audioCtx && _audioCtx.state !== 'closed') _audioCtx.close();
     _audioCtx = null;
     _workletNode = null;
-    _audioBuffer = null;
     audioAnalyzerState.engineState = AudioState.IDLE;
     audioAnalyzerState.pcmData = null;
     _resetSpectrogram();
@@ -269,6 +415,7 @@ async function _initWorklet() {
                 audioAnalyzerState.lastFrame = {
                     magnitude: new Float32Array(msg.magnitude),
                     phase: new Float32Array(msg.phase),
+                    timeDomain: msg.timeDomain ? new Float32Array(msg.timeDomain) : null,
                     timestamp: msg.timestamp
                 };
             }
@@ -289,18 +436,16 @@ async function _initWorklet() {
 }
 
 function _stopSource() {
-    if (_sourceNode) {
-        try { _sourceNode.stop(); } catch (e) {}
-        try { _sourceNode.disconnect(); } catch (e) {}
-        _sourceNode = null;
-    }
+    // Only used conceptually now, replaced by _audioEl.pause()
 }
 
 function _startTimeTrack() {
     _cancelTimeTrack();
     const tick = () => {
         if (audioAnalyzerState.engineState !== AudioState.PLAYING) return;
-        audioAnalyzerState.currentTime = _startOffset + (_audioCtx.currentTime - _startTime);
+        if (_audioEl) {
+            audioAnalyzerState.currentTime = _audioEl.currentTime;
+        }
         notify();
         _rafId = requestAnimationFrame(tick);
     };
