@@ -1,6 +1,0 @@
-# Course materials are private and never committed.
-# Ignore everything in this folder...
-*
-# ...except the structure-documenting README and this file itself.
-!README.md
-!.gitignore

@@ -1,18 +1,41 @@
-# Playwright MCP debug artifacts — console logs + page snapshots dumped during
-# in-browser QA. These got committed and uncommitted across several auto-commits;
-# they are scratch output, never source.
+# Playwright MCP debug artifacts
 .playwright-mcp/
 
-# Audit / debug screenshots taken during design + QA passes (root-level PNGs).
+# Audit / debug screenshots
 /*.png
 audit-*.png
 
 # Dependencies
 node_modules/
+.npm/
 
 # Scheduled-task / session lock files written by local automation
-.claude/scheduled_tasks.lock
+.claude/
+.agents/
 
 # OS noise
 .DS_Store
 Thumbs.db
+
+# Build outputs & Desktop App
+dist/
+build/
+out/
+release/
+
+# Personal / Study Materials (Untracked)
+*.zip
+Maths/kb/
+Maths/concepts/
+Maths/conductor/
+Maths/course-materials/
+Maths/docs/
+Maths/vault/
+Maths/memory-management-suite/
+Maths/Math class source files/
+Maths/backups/
+Maths/backup*/
+rtk.exe
+create_kb.py
+test-obs.js
+Maths/test-obs.js
