@@ -4,28 +4,36 @@
 
 > "Dis-le-moi et je l'oublierai, enseigne-le-moi et je m'en souviendrai peut-être, implique-moi et j'apprendrai." — Benjamin Franklin
 
-Quand j'ai commencé mes études en Génie Électrique et Informatique Industrielle (GEII), je voulais trouver comment véritablement visualiser des concepts complexes. Comment peut-on comprendre les transformées de Fourier, les lieux des racines et la cinématique sans se contenter de fixer les pages statiques d'un manuel ?
+Quand j'ai commencé mes études en Génie Électrique et Informatique Industrielle (GEII), je voulais trouver comment véritablement visualiser des concepts complexes. Comment peut-on comprendre les transformées de Fourier, les lieux des racines et la cinématique sans se contenter de fixer les pages statiques d'un manuel ? 😪
 
-Ici [SOUFI Soufiane](https://github.com/SOUFISoufiane). J'ai passé deux années entières à naviguer à travers des notions denses de mathématiques appliquées et de physique, passant du monde analogique au monde numérique, à travers les filtres, les systèmes de contrôle, le traitement du signal, jusqu'aux transformées de Fourier et en Z. Au fil des années, j'ai découvert que j'apprends 10 fois mieux en reliant le monde théorique aride au monde visuel par des dessins, des schématisations, et même ma propre Imagination. Mais les dessins et les schémas finissent dans un dossier et sont oubliés, l'Imagination ne dure que quelques minutes, alors que je sais que le code dure éternellement. J'ai donc décidé de créer des outils interactifs pour m'aider à visualiser et à comprendre les concepts, mais aussi pour mémoriser mes mois de travail acharné et d'étude avec un accès facile pour combler les lacunes de mémoire. Et étonnamment, j'apprends plus efficacement que jamais, je me souviens des choses beaucoup plus vite, je peux appliquer un exercice de TD (théorique) dans une simulation visuelle et valider mon raisonnement, puis ne plus jamais l'oublier. Ces derniers mois, j'ai rassemblé tout cela et construit des modules interactifs de qualité production, entièrement visuels, fonctionnant sur des simulations et couvrant le cœur du programme de GEII, mais cela s'étendra à l'ingénierie à mesure que je progresserai. Conçu pour la compréhension logique et non l'apprentissage par cœur, car l'important n'est pas le nombre de pages que vous lisez, c'est ce que vous comprenez vraiment.
+Ici [SOUFI Soufiane](https://github.com/SOUFISoufiane). Ces deux dernières années, j'ai navigué à travers les mondes denses des mathématiques appliquées et de la physique, faisant le pont entre les systèmes analogiques et numériques à travers les filtres, la théorie du contrôle, le traitement du signal, et les transformées de Fourier. En chemin, j'ai réalisé que j'apprends 10 fois mieux en reliant la théorie aride aux concepts visuels.
+
+Si les dessins finissent classés et si l'imagination s'estompe en quelques minutes, le code, lui, dure éternellement. J'ai construit ces outils interactifs pour visualiser des concepts complexes, capturer des mois de travail acharné, et combler mes propres lacunes de mémoire. Étonnamment, cela a mieux fonctionné que je ne l'aurais jamais imaginé. Je peux maintenant me remémorer les concepts instantanément, intégrer un exercice théorique dans une simulation visuelle pour valider mon raisonnement, et ne plus jamais l'oublier.
+
+Récemment, j'ai tout consolidé dans ces modules interactifs de qualité production, basés sur des simulations. Ils couvrent actuellement le programme de base du GEII, mais s'étendront à des sujets d'ingénierie plus vastes au fur et à mesure de ma progression. Ceci est conçu pour la compréhension logique et non pour l'apprentissage par cœur, car l'important n'est pas le nombre de pages que vous lisez, c'est ce que vous comprenez vraiment.
 
 Même étudiant. Époque différente. La différence, ce sont les outils.
 
-**GEII Visual Toolbox a été ma solution.** Cet outil transforme des équations abstraites en un laboratoire d'ingénierie virtuel — un oscilloscope qui réagit en temps réel, un simulateur de circuits qui affiche instantanément les équivalents de Thévenin, une carte logique numérique qui met à jour dynamiquement les tableaux de Karnaugh, et un bras robotique qui bouge lorsque vous modifiez des coordonnées et des paramètres. Six modules spécialisés (d'autres sont à venir...), tous interactifs, tous conçus avec des technologies web, tous gratuits, sous licence MIT.
+**GEII Visual Toolbox est la solution.** Il transforme des équations abstraites en un laboratoire d'ingénierie virtuel fluide. Que vous soyez un étudiant simulant un circuit, un maker analysant un signal, ou un développeur autodidacte explorant la cinématique robotique, cette boîte à outils s'adapte à vous. Elle comprend un oscilloscope qui réagit en temps réel, un simulateur de circuits qui calcule les équivalents de Thévenin instantanément, des cartes logiques numériques qui résolvent dynamiquement les tableaux de Karnaugh, et un bras robotique à 6 axes qui répond aux modifications de vos coordonnées.
 
-Ceci est mon usine éducative open source. Je l'utilise tous les jours. Je la partage car premièrement, je sais que de nombreuses personnes extraordinaires peuvent enrichir ce projet et le rendre encore plus grand, ce qui pourrait aider d'autres étudiants. Et deuxièmement, cela pourrait être un bel héritage et un bon souvenir de mon travail acharné et de mon dévouement durant mes années à l'IUT.
+Six modules spécialisés (d'autres sont à venir), tous hautement interactifs, construits avec des technologies web modernes, et 100% open source.
+
+Ceci est mon usine éducative open source. Je l'utilise tous les jours. Je la partage car premièrement, je sais que la communauté peut s'appuyer dessus pour la rendre encore plus formidable pour d'autres étudiants, et deuxièmement, parce qu'elle témoigne de mon travail acharné et de mon dévouement durant mon passage à l'IUT.
 
 Forkez-le. Améliorez-le. Appropriez-le-vous 😊
 
 **À qui cela s'adresse-t-il :**
-- **Étudiants** — particulièrement ceux qui ont besoin de *voir* pour comprendre.
-- **Esprits curieux** — quiconque souhaite comprendre le traitement du signal, l'automatique et l'électronique.
+- **Apprenants visuels & Étudiants** — Particulièrement ceux qui ont besoin de *voir* pour vraiment comprendre (statut : visualisations de base terminées, s'enrichit au fil de ma progression).
+- **Hackers Hardware & Makers** — Toute personne construisant de l'électronique DIY ayant besoin de simuler rapidement des circuits ou de la logique numérique (statut : en amélioration continue...).
+- **Constructeurs Autodidactes** — Ceux qui recherchent des moyens pratiques et interactifs pour saisir des systèmes de contrôle complexes et la cinématique (statut : en amélioration continue...).
+- **Professeurs** — Professeurs à la recherche de laboratoires virtuels interactifs pour vulgariser des théories abstraites auprès d'un public plus jeune (statut : en amélioration continue...).
 
 ## Démarrage rapide
 
 1. Installez le GEII Visual Toolbox (30 secondes — voir ci-dessous)
 2. Ouvrez **Signal Observatory** — visualisez l'audio en direct et les transformées de Fourier.
 3. Ouvrez **Automatique (Servo Lab)** — tracez dynamiquement les lieux des racines et les diagrammes de Bode.
-4. Explorez la **Base de connaissances (My2ndBrain)** — lisez les procédures (SOPs) et les notes de cours.
+4. Explorez la **Base de connaissances** — lisez les SOPs et les notes d'étude.
 5. Arrêtez-vous là. Vous saurez si cet outil est fait pour vous.
 
 ## Options d'installation
@@ -77,10 +85,10 @@ Le GEII Visual Toolbox est une suite d'applications interactives. Chaque module 
 
 Le code et les visualisations ne représentent que la moitié du travail. L'autre moitié, c'est la théorie.
 
-Ce dépôt inclut une base de connaissances centrale (KB) pour tous les concepts théoriques, parfaitement intégrée à l'application.
+Ce dépôt inclut une base de connaissances centrale (KB) pour tous les concepts théoriques, parfaitement intégrée à l'application. Vous pouvez la trouver sur la page d'accueil.
 
 À l'intérieur, vous trouverez :
-- **Concepts & Entités :** Explorations approfondies des séries de Fourier, des transformées de Laplace, etc.
+- **Concepts & Entités :** Explorations visuelles des séries de Fourier, des transformées de Laplace, des filtres sur un large éventail de signaux et d'équations, et plus encore.
 - **SOPs (Procédures Opérationnelles Standards) :** Guides étape par étape sur la manière d'aborder les problèmes d'ingénierie.
 - **Logs d'optimisation des tokens :** Historique de l'entretien et de l'optimisation de cette base de connaissances.
 
