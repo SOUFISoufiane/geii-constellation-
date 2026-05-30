@@ -30,13 +30,23 @@ export const audioAnalyzerState = {
     spectrogramTimestamps: [],
     // Config
     fftSize:       2048,
-    windowType:    'hann'
+    windowType:    'hann',
+    
+    // Player Controls
+    volume:        1.0,
+    playbackRate:  1.0,
+    loop:          false,
+    filterEnabled: false,
+    filterType:    'allpass',
+    filterFreq:    20000
 };
 
 // ─── Private ────────────────────────────────────────────────────────
 let _audioCtx   = null;
 let _sourceNode = null;
 let _workletNode = null;
+let _gainNode    = null;
+let _biquadNode  = null;
 let _audioEl     = null;
 let _blobUrl     = null;
 let _startOffset = 0;
@@ -282,13 +292,28 @@ export async function playAudio() {
 
     if (!_audioEl) {
         _audioEl = new Audio(_blobUrl);
+        _audioEl.loop = audioAnalyzerState.loop;
+        _audioEl.playbackRate = audioAnalyzerState.playbackRate;
+        
         _sourceNode = _audioCtx.createMediaElementSource(_audioEl);
 
+        _biquadNode = _audioCtx.createBiquadFilter();
+        _biquadNode.type = audioAnalyzerState.filterType;
+        _biquadNode.frequency.value = audioAnalyzerState.filterFreq;
+        
+        _gainNode = _audioCtx.createGain();
+        _gainNode.gain.value = audioAnalyzerState.volume;
+
+        // Route: Source -> Filter -> Gain
+        _sourceNode.connect(_biquadNode);
+        _biquadNode.connect(_gainNode);
+
         if (_workletNode) {
-            _sourceNode.connect(_workletNode);
+            // Gain -> Worklet (for FFT visual) -> Destination
+            _gainNode.connect(_workletNode);
             _workletNode.connect(_audioCtx.destination);
         } else {
-            _sourceNode.connect(_audioCtx.destination);
+            _gainNode.connect(_audioCtx.destination);
         }
 
         _audioEl.onended = () => {
@@ -378,6 +403,52 @@ export function setWindowType(type) {
 }
 
 /**
+ * Player Controls
+ */
+export function setVolume(vol) {
+    audioAnalyzerState.volume = Math.max(0, Math.min(vol, 1));
+    if (_gainNode && _audioCtx) {
+        _gainNode.gain.setTargetAtTime(audioAnalyzerState.volume, _audioCtx.currentTime, 0.05);
+    }
+}
+
+export function setPlaybackRate(rate) {
+    audioAnalyzerState.playbackRate = Math.max(0.1, Math.min(rate, 4.0));
+    if (_audioEl) {
+        _audioEl.playbackRate = audioAnalyzerState.playbackRate;
+    }
+}
+
+export function setLoop(enabled) {
+    audioAnalyzerState.loop = !!enabled;
+    if (_audioEl) {
+        _audioEl.loop = audioAnalyzerState.loop;
+    }
+}
+
+export function setFilterParams(enabled, type, freq) {
+    audioAnalyzerState.filterEnabled = !!enabled;
+    // Map custom types to biquad types, default to 'allpass' when disabled
+    let biquadType = 'allpass';
+    if (enabled) {
+        if (type === 'butterworth' || type === 'chebyshev1' || type === 'chebyshev2' || type === 'rc') {
+            biquadType = 'lowpass';
+        } else {
+            biquadType = 'lowpass'; // Default fallback
+        }
+    }
+    
+    audioAnalyzerState.filterType = biquadType;
+    audioAnalyzerState.filterFreq = freq;
+    
+    if (_biquadNode && _audioCtx) {
+        _biquadNode.type = biquadType;
+        const nyquist = _audioCtx.sampleRate / 2;
+        _biquadNode.frequency.setTargetAtTime(Math.min(freq, nyquist), _audioCtx.currentTime, 0.1);
+    }
+}
+
+/**
  * Cleanup everything.
  */
 export function disposeAudioEngine() {
@@ -386,6 +457,10 @@ export function disposeAudioEngine() {
         _audioEl.removeAttribute('src');
         _audioEl = null;
     }
+    if (_sourceNode) { _sourceNode.disconnect(); _sourceNode = null; }
+    if (_biquadNode) { _biquadNode.disconnect(); _biquadNode = null; }
+    if (_gainNode)   { _gainNode.disconnect(); _gainNode = null; }
+
     if (_blobUrl) {
         URL.revokeObjectURL(_blobUrl);
         _blobUrl = null;
@@ -412,6 +487,9 @@ async function _initWorklet() {
         _workletNode.port.onmessage = (e) => {
             const msg = e.data;
             if (msg.type === 'fft-frame') {
+                // Prevent silent frames from overwriting the visualization when paused/stopped
+                if (audioAnalyzerState.engineState !== AudioState.PLAYING) return;
+                
                 audioAnalyzerState.lastFrame = {
                     magnitude: new Float32Array(msg.magnitude),
                     phase: new Float32Array(msg.phase),

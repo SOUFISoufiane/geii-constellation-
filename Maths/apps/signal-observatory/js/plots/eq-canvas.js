@@ -8,11 +8,13 @@ export function renderEqCanvas(audioAnalyzerState) {
     // Show canvas, hide the plotly div if needed, but since they overlap and plotly is empty during streaming, we just show canvas
     canvas.style.display = 'block';
     
-    // Resize to match container
+    // Resize to match container without fractional jitter clearing the canvas
     const rect = canvas.parentElement.getBoundingClientRect();
-    if (canvas.width !== rect.width || canvas.height !== rect.height) {
-        canvas.width = rect.width;
-        canvas.height = rect.height;
+    const w = Math.floor(rect.width);
+    const h = Math.floor(rect.height);
+    if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w;
+        canvas.height = h;
     }
 
     const ctx = canvas.getContext('2d');
@@ -55,16 +57,37 @@ function _drawLoop(canvas, ctx, state, params) {
     const width = canvas.width;
     const height = canvas.height;
 
-    // Semi-transparent clear for motion blur trail effect
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-    ctx.fillRect(0, 0, width, height);
+    // Background clearing logic
+    if (state.engineState !== 'playing') {
+        // If not playing, we fully clear and draw a crisp frozen frame (survives canvas resizes and supports scrubbing)
+        ctx.clearRect(0, 0, width, height);
+    } else {
+        // If playing (or fading out), apply semi-transparent black for motion blur trails
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+        ctx.fillRect(0, 0, width, height);
+    }
 
-    const frame = state.lastFrame;
-    if (frame && frame.magnitude) {
-        const mag = frame.magnitude;
+    // Always attempt to draw bars to support scrubbing while paused/stopped
+    let mag = null;
+    if (state.spectrogram && state.spectrogram.length > 0) {
+        let bestIdx = 0;
+        let bestDist = Infinity;
+        for (let i = 0; i < state.spectrogramTimestamps.length; i++) {
+            const d = Math.abs(state.spectrogramTimestamps[i] - state.currentTime);
+            if (d < bestDist) { bestDist = d; bestIdx = i; }
+        }
+        const frame = state.spectrogram[bestIdx];
+        if (frame) {
+            mag = frame;
+        }
+    } else if (state.lastFrame && state.lastFrame.magnitude) {
+        mag = state.lastFrame.magnitude;
+    }
+
+    if (mag) {
         const nBins = mag.length;
         
-        // We might want to only show the lower half of frequencies for better visual balance
+        // Show lower 70% of frequencies for better visual balance
         const visibleBins = Math.floor(nBins * 0.7); 
         const barWidth = width / visibleBins;
 

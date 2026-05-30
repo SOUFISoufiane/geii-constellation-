@@ -35,7 +35,7 @@ import { initNotebook } from './ui/notebook.js';
 import {
     audioAnalyzerState, AudioState,
     loadAudioFile, playAudio, pauseAudio, seekAudio, stopAudio,
-    setFFTSize, setWindowType
+    setFFTSize, setWindowType, setVolume, setPlaybackRate, setLoop, setFilterParams
 } from './audio/file-audio-engine.js';
 import { renderAudioAnalyzer } from './plots/audio-viz.js';
 
@@ -166,16 +166,25 @@ const AUDIO_LABELS    = ['①OSCILLOSCOPE PCM', '②SPECTRE @ PLAYHEAD', '③PHA
 
 function _setTelemetryLabels(labels) {
     const els = document.querySelectorAll('.panel-label');
-    // Bottom 4 panels (last 4 .panel-label elements in raw telemetry section)
     const bottomLabels = Array.from(els).slice(-4);
     bottomLabels.forEach((el, i) => {
-        if (labels[i]) {
+        if (labels[i] && el) {
             const numMatch = labels[i].match(/^([\u2460-\u2469])/);
             const num = numMatch ? numMatch[1] : '';
             const text = labels[i].replace(/^[\u2460-\u2469]/, '');
             el.innerHTML = `<span class="num">${num}</span>${text}`;
         }
     });
+}
+
+function getTelemetryLabelsForMode(mode) {
+    switch(mode) {
+        case 'geii': return ['①TEMPOREL s(t)', '②AMPLITUDE |S(f)|', '③PHASE φ(f)', '④ENROULEMENT 2D'];
+        case 'job': return ['①OSCILLOSCOPE', '②WATERFALL', '③THD+N / SNR', '④POLE-ZERO MAP'];
+        case 'sys': return ['①BODE MAGNITUDE', '②BODE PHASE', '③STEP RESPONSE', '④NYQUIST PLOT'];
+        case 'acoustic': return ['①CHROMAGRAM', '②ENVELOPE / RMS', '③HPR SEPARATION', '④CENTS DETUNE'];
+        default: return AUDIO_LABELS;
+    }
 }
 
 function renderAudioAnalyzerMode() {
@@ -191,8 +200,9 @@ function renderAudioAnalyzerMode() {
         titleEl.innerHTML = `${badge}<span>${name}</span><span style="color:var(--text-dim);font-weight:400">— ${desc}</span>`;
     }
 
-    // Update telemetry labels for audio mode
-    _setTelemetryLabels(AUDIO_LABELS);
+    // Update telemetry labels based on selected mode
+    const mode = state.telemetryMode || 'geii';
+    _setTelemetryLabels(getTelemetryLabelsForMode(mode));
 
     // Render via the audio-viz module (handles all 4 states)
     renderAudioAnalyzer();
@@ -201,6 +211,12 @@ function renderAudioAnalyzerMode() {
 
     // Update the transport bar
     _syncAudioTransport();
+    
+    // Sync DSP filter from state if active
+    const filterToggle = document.getElementById('audio-filter-toggle');
+    if (filterToggle && filterToggle.checked) {
+        setFilterParams(true, state.filterType || 'butterworth', Math.abs(state.cutoffFreq || 1000));
+    }
 }
 
 function _syncAudioTransport() {
@@ -598,5 +614,87 @@ function initAudioAnalyzerControls() {
         windowSelect.addEventListener('change', (e) => {
             setWindowType(e.target.value);
         });
+    }
+
+    // ── Retro Deck Controls ──
+    const volSlider = document.getElementById('audio-vol-slider');
+    const spdSlider = document.getElementById('audio-spd-slider');
+    const loopToggle = document.getElementById('audio-loop-toggle');
+    const filterToggle = document.getElementById('audio-filter-toggle');
+    const modeSelector = document.getElementById('telemetry-mode-selector');
+
+    if (modeSelector) {
+        modeSelector.addEventListener('change', (e) => {
+            state.telemetryMode = e.target.value;
+            if (state.activeCombo === 'audio_analyzer') {
+                _setTelemetryLabels(getTelemetryLabelsForMode(state.telemetryMode));
+                notify();
+            }
+        });
+        state.telemetryMode = modeSelector.value;
+    }
+
+    if (volSlider) {
+        volSlider.addEventListener('input', e => setVolume(parseFloat(e.target.value)));
+    }
+    if (spdSlider) {
+        spdSlider.addEventListener('input', e => setPlaybackRate(parseFloat(e.target.value)));
+    }
+    if (loopToggle) {
+        loopToggle.addEventListener('change', e => setLoop(e.target.checked));
+    }
+    if (filterToggle) {
+        filterToggle.addEventListener('change', e => {
+            if (e.target.checked) {
+                setFilterParams(true, state.filterType || 'butterworth', Math.abs(state.cutoffFreq || 1000));
+            } else {
+                setFilterParams(false, 'allpass', 20000);
+            }
+        });
+    }
+
+    // ── Generate Piano Deck ──
+    const pianoDeck = document.getElementById('piano-deck');
+    if (pianoDeck) {
+        const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const numKeys = 25; // 2 octaves + C
+        pianoDeck.innerHTML = '';
+        for (let i = 0; i < numKeys; i++) {
+            const noteIndex = i % 12;
+            const octave = 4 + Math.floor(i / 12);
+            const isBlack = noteIndex === 1 || noteIndex === 3 || noteIndex === 6 || noteIndex === 8 || noteIndex === 10;
+            const key = document.createElement('div');
+            key.className = 'piano-key ' + (isBlack ? 'black' : 'white');
+            key.id = `key-${notes[noteIndex].replace('#','s')}${octave}`;
+            key.dataset.note = `${notes[noteIndex]}${octave}`;
+            key.style.flex = isBlack ? '0 0 2.5%' : '1';
+            key.style.height = isBlack ? '60%' : '100%';
+            key.style.backgroundColor = isBlack ? '#222' : '#ddd';
+            key.style.border = '1px solid #111';
+            key.style.borderBottomLeftRadius = '3px';
+            key.style.borderBottomRightRadius = '3px';
+            key.style.cursor = 'pointer';
+            key.style.zIndex = isBlack ? '2' : '1';
+            key.style.transition = 'background-color 0.1s';
+            if (isBlack) {
+                key.style.marginLeft = '-1.25%';
+                key.style.marginRight = '-1.25%';
+            }
+            
+            key.addEventListener('mousedown', () => {
+                const freq = 440 * Math.pow(2, (i - 9) / 12);
+                key.style.backgroundColor = 'var(--accent-cyan)';
+                // We'll dispatch an event or call a method to play the tone if we want,
+                // but just visually it's nice.
+            });
+            key.addEventListener('mouseup', () => {
+                key.style.backgroundColor = isBlack ? '#222' : '#ddd';
+            });
+            key.addEventListener('mouseleave', () => {
+                key.style.backgroundColor = isBlack ? '#222' : '#ddd';
+            });
+            
+            pianoDeck.appendChild(key);
+        }
     }
 }

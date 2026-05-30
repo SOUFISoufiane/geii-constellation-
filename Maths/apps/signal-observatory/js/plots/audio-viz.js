@@ -143,7 +143,7 @@ function _renderFusionPanel(s) {
         return;
     }
 
-    stopEqCanvas();
+    renderEqCanvas(s);
 
     const nBins = fftSize >> 1;
     const nyquist = sampleRate / 2;
@@ -153,18 +153,54 @@ function _renderFusionPanel(s) {
     // Time axis
     const tAxis = spectrogramTimestamps;
 
-    // Transpose for heatmap: z[freq][time]
-    const zData = Array.from({ length: nBins }, (_, f) => {
-        return tAxis.map((_, t) => spectrogram[t] ? (spectrogram[t][f] || -100) : -100);
-    });
+    const maxFrames3D = 200;
+    const maxBins3D = 128;
+    const tStep3D = Math.max(1, Math.floor(tAxis.length / maxFrames3D));
+    const fStep3D = Math.max(1, Math.floor(nBins / maxBins3D));
 
-    // Clamp dB range for better visual contrast
-    const DB_FLOOR = -80;
-    for (let f = 0; f < zData.length; f++) {
-        for (let t = 0; t < zData[f].length; t++) {
-            if (zData[f][t] < DB_FLOOR) zData[f][t] = DB_FLOOR;
+    // Cache the heavy arrays on the window object to avoid massive 60fps allocations during playback
+    if (!window._fusionCache || window._fusionCache.fileName !== s.fileName || window._fusionCache.specLength !== spectrogram.length) {
+        
+        const zData = Array.from({ length: nBins }, (_, f) => {
+            return tAxis.map((_, t) => spectrogram[t] ? (spectrogram[t][f] || -100) : -100);
+        });
+
+        const DB_FLOOR = -80;
+        for (let f = 0; f < zData.length; f++) {
+            for (let t = 0; t < zData[f].length; t++) {
+                if (zData[f][t] < DB_FLOOR) zData[f][t] = DB_FLOOR;
+            }
         }
+
+        const tAxis3D = [];
+        const fAxis3D = [];
+        const zData3D = [];
+
+        for (let fi = 0; fi < nBins; fi += fStep3D) {
+            fAxis3D.push(fAxis[fi]);
+        }
+        for (let ti = 0; ti < tAxis.length; ti += tStep3D) {
+            tAxis3D.push(tAxis[ti]);
+        }
+        for (let fi = 0; fi < fAxis3D.length; fi++) {
+            const row = [];
+            for (let ti = 0; ti < tAxis3D.length; ti++) {
+                const srcF = fi * fStep3D;
+                const srcT = ti * tStep3D;
+                const val = (spectrogram[srcT] && spectrogram[srcT][srcF]) || -80;
+                row.push(Math.max(val, DB_FLOOR));
+            }
+            zData3D.push(row);
+        }
+
+        window._fusionCache = {
+            fileName: s.fileName,
+            specLength: spectrogram.length,
+            zData, zData3D, tAxis3D, fAxis3D, DB_FLOOR
+        };
     }
+
+    const { zData, zData3D, tAxis3D, fAxis3D } = window._fusionCache;
 
     // Use subplots: left = 2D heatmap, right = 3D surface
     const layout = baseLayout({
@@ -181,33 +217,6 @@ function _renderFusionPanel(s) {
             camera: { eye: { x: -1.6, y: -1.4, z: 0.7 } }
         }
     });
-
-    // Downsample spectrogram for 3D surface (limit to ~200 time frames × 128 freq bins)
-    const maxFrames3D = 200;
-    const maxBins3D = 128;
-    const tStep3D = Math.max(1, Math.floor(tAxis.length / maxFrames3D));
-    const fStep3D = Math.max(1, Math.floor(nBins / maxBins3D));
-
-    const tAxis3D = [];
-    const fAxis3D = [];
-    const zData3D = [];
-
-    for (let fi = 0; fi < nBins; fi += fStep3D) {
-        fAxis3D.push(fAxis[fi]);
-    }
-    for (let ti = 0; ti < tAxis.length; ti += tStep3D) {
-        tAxis3D.push(tAxis[ti]);
-    }
-    for (let fi = 0; fi < fAxis3D.length; fi++) {
-        const row = [];
-        for (let ti = 0; ti < tAxis3D.length; ti++) {
-            const srcF = fi * fStep3D;
-            const srcT = ti * tStep3D;
-            const val = (spectrogram[srcT] && spectrogram[srcT][srcF]) || -80;
-            row.push(Math.max(val, DB_FLOOR));
-        }
-        zData3D.push(row);
-    }
 
     const data = [
         // 2D Spectrogram (heatmap)
@@ -261,21 +270,53 @@ function _renderTelemetryPanels(s) {
     const { pcmData, sampleRate, currentTime, fftSize, spectrogram, spectrogramTimestamps, lastFrame } = s;
     if (!pcmData && (!lastFrame || !lastFrame.timeDomain)) return;
 
-    // ① Oscilloscope — time-domain waveform
-    if (pcmData) {
-        _renderOscilloscope(pcmData, sampleRate, currentTime);
-    } else if (lastFrame && lastFrame.timeDomain) {
-        _renderOscilloscopeStreaming(lastFrame.timeDomain, sampleRate, currentTime);
+    // Use state.telemetryMode to branch out 
+    const mode = window.state ? window.state.telemetryMode : 'geii';
+    
+    // ① Panel 1: Time domain (Oscilloscope or related)
+    if (mode === 'geii' || mode === 'job') {
+        if (pcmData) {
+            _renderOscilloscope(pcmData, sampleRate, currentTime);
+        } else if (lastFrame && lastFrame.timeDomain) {
+            _renderOscilloscopeStreaming(lastFrame.timeDomain, sampleRate, currentTime);
+        }
+    } else {
+        // Fallback for other modes
+        _renderEmptyPanel('plot-raw-time');
     }
 
-    // ② Spectrum snapshot at current playhead time
-    _renderSpectrumSnapshot(s);
+    // ② Panel 2: Spectrum snapshot
+    if (mode === 'geii' || mode === 'job' || mode === 'sys' || mode === 'acoustic') {
+        _renderSpectrumSnapshot(s);
+    } else {
+        _renderEmptyPanel('plot-raw-mag');
+    }
 
-    // ③ Phase display (from current frame)
-    _renderPhaseSnapshot(s);
+    // ③ Panel 3: Phase
+    if (mode === 'geii' || mode === 'sys') {
+        _renderPhaseSnapshot(s);
+    } else {
+        _renderEmptyPanel('plot-raw-phase');
+    }
 
-    // ④ Winding / Statistics panel
-    _renderAudioStats(s);
+    // ④ Panel 4: Stats / RMS / Winding
+    if (mode === 'geii' || mode === 'job' || mode === 'acoustic') {
+        _renderAudioStats(s);
+    } else {
+        _renderEmptyPanel('plot-raw-circle');
+    }
+}
+
+function _renderEmptyPanel(id) {
+    const layout = baseLayout({
+        xaxis: { visible: false },
+        yaxis: { visible: false },
+        annotations: [{
+            text: '—', showarrow: false,
+            font: { size: 14, color: PALETTE.textDim, family: 'Space Mono, monospace' }
+        }]
+    });
+    Plotly.react(id, [], layout, PLOTLY_CONFIG);
 }
 
 function _renderOscilloscopeStreaming(timeDomain, sr, currentTime) {
@@ -464,6 +505,65 @@ function _renderSpectrumSnapshot(s) {
     });
 
     Plotly.react('plot-raw-mag', traces, layout, PLOTLY_CONFIG);
+
+    // ─── Update HUD Overlay ───
+    const hud = document.getElementById('fusion-hud');
+    if (hud) {
+        hud.style.display = 'flex';
+        const f0 = topPeaks.length > 0 ? topPeaks[0] : 0;
+        
+        let sumMag = 0, sumFMag = 0;
+        let maxDb = -Infinity;
+        for(let i=0; i<nBins; i++) { 
+            const m = Math.pow(10, magData[i]/20); 
+            sumMag += m; 
+            sumFMag += fAxis[i] * m; 
+            if(magData[i] > maxDb) maxDb = magData[i];
+        }
+        
+        const centroid = sumMag > 0 ? sumFMag / sumMag : 0;
+        const pitchEl = document.getElementById('hud-pitch');
+        const centroidEl = document.getElementById('hud-centroid');
+        const rmsEl = document.getElementById('hud-rms');
+        const noteEl = document.getElementById('hud-note');
+        
+        if (pitchEl) pitchEl.textContent = f0 > 0 ? `${f0.toFixed(1)} Hz` : '-- Hz';
+        if (centroidEl) centroidEl.textContent = centroid > 0 ? `${centroid.toFixed(0)} Hz` : '-- Hz';
+        if (rmsEl) rmsEl.textContent = isFinite(maxDb) ? `${maxDb.toFixed(1)} dBFS` : '-- dBFS';
+        
+        if(f0 > 0 && noteEl) {
+            const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+            const halfSteps = Math.round(12 * Math.log2(f0 / 440));
+            const idx = (halfSteps + 9) % 12; // A is 9
+            const noteIdx = idx < 0 ? idx + 12 : idx;
+            const octave = 4 + Math.floor((halfSteps + 9) / 12);
+            noteEl.textContent = `${noteNames[noteIdx]}${octave}`;
+        } else if (noteEl) {
+            noteEl.textContent = '--';
+        }
+        
+        // Piano active keys highlight
+        if (f0 > 0 && noteEl) {
+            const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+            const halfSteps = Math.round(12 * Math.log2(f0 / 440));
+            const idx = (halfSteps + 9) % 12; 
+            const noteIdx = idx < 0 ? idx + 12 : idx;
+            const octave = 4 + Math.floor((halfSteps + 9) / 12);
+            
+            // clear all piano active states
+            const keys = document.querySelectorAll('.piano-key');
+            keys.forEach(k => {
+                const isBlack = k.classList.contains('black');
+                k.style.backgroundColor = k.classList.contains('black') ? '#222' : '#ddd';
+            });
+            
+            const activeKeyId = `key-${noteNames[noteIdx].replace('#','s')}${octave}`;
+            const activeKey = document.getElementById(activeKeyId);
+            if (activeKey) {
+                activeKey.style.backgroundColor = 'var(--accent-cyan)';
+            }
+        }
+    }
 }
 
 function _renderPhaseSnapshot(s) {
@@ -472,26 +572,32 @@ function _renderPhaseSnapshot(s) {
     // If we have a live frame from the worklet, use it; otherwise derive from spectrogram
     // For phase we need the raw FFT — we'll compute it on the fly from PCM around currentTime
     const { pcmData } = s;
-    if (!pcmData) return;
-
-    const N = fftSize;
-    const centerSample = Math.floor(currentTime * sampleRate);
-    const start = Math.max(0, centerSample - (N >> 1));
-
-    const re = new Float32Array(N);
-    const im = new Float32Array(N);
-    // Hann window
-    for (let i = 0; i < N; i++) {
-        const sample = pcmData[start + i] || 0;
-        const w = 0.5 * (1 - Math.cos(2 * Math.PI * i / (N - 1)));
-        re[i] = sample * w;
-    }
-    _quickFFT(re, im);
-
-    const nBins = N >> 1;
+    
+    let phaseData = null;
+    const nBins = fftSize >> 1;
     const nyquist = sampleRate / 2;
     const fAxis = Array.from({ length: nBins }, (_, i) => (i / nBins) * nyquist);
-    const phaseData = Array.from({ length: nBins }, (_, k) => Math.atan2(im[k], re[k]));
+
+    if (lastFrame && lastFrame.phase && lastFrame.phase.length > 0) {
+        phaseData = lastFrame.phase;
+    } else if (pcmData) {
+        const N = fftSize;
+        const centerSample = Math.floor(currentTime * sampleRate);
+        const start = Math.max(0, centerSample - (N >> 1));
+
+        const re = new Float32Array(N);
+        const im = new Float32Array(N);
+        // Hann window
+        for (let i = 0; i < N; i++) {
+            const sample = pcmData[start + i] || 0;
+            const w = 0.5 * (1 - Math.cos(2 * Math.PI * i / (N - 1)));
+            re[i] = sample * w;
+        }
+        _quickFFT(re, im);
+        phaseData = Array.from({ length: nBins }, (_, k) => Math.atan2(im[k], re[k]));
+    }
+
+    if (!phaseData) return;
 
     const layout = baseLayout({
         xaxis: { ...baseLayout().xaxis, title: axisTitle('f (Hz)'), range: [0, Math.min(nyquist, 8000)] },
@@ -505,27 +611,58 @@ function _renderPhaseSnapshot(s) {
 }
 
 function _renderAudioStats(s) {
-    const { pcmData, sampleRate, currentTime, duration, fftSize } = s;
-    if (!pcmData) return;
+    const { pcmData, sampleRate, currentTime, duration, fftSize, lastFrame } = s;
+    if (!pcmData && (!lastFrame || !lastFrame.timeDomain)) return;
 
-    // RMS energy over time (for the winding panel area)
-    const windowSamples = 2048;
-    const hop = 1024;
-    const nFrames = Math.floor((pcmData.length - windowSamples) / hop) + 1;
-    const maxFrames = 300;
-    const frameStep = Math.max(1, Math.floor(nFrames / maxFrames));
+    let tAxis = [];
+    let rmsData = [];
 
-    const tAxis = [];
-    const rmsData = [];
+    if (pcmData) {
+        // Full file RMS computation
+        const windowSamples = 2048;
+        const hop = 1024;
+        const nFrames = Math.floor((pcmData.length - windowSamples) / hop) + 1;
+        const maxFrames = 300;
+        const frameStep = Math.max(1, Math.floor(nFrames / maxFrames));
 
-    for (let fr = 0; fr < nFrames; fr += frameStep) {
-        const start = fr * hop;
-        let sum = 0;
-        for (let i = 0; i < windowSamples && (start + i) < pcmData.length; i++) {
-            sum += pcmData[start + i] * pcmData[start + i];
+        for (let fr = 0; fr < nFrames; fr += frameStep) {
+            const start = fr * hop;
+            let sum = 0;
+            for (let i = 0; i < windowSamples && (start + i) < pcmData.length; i++) {
+                sum += pcmData[start + i] * pcmData[start + i];
+            }
+            tAxis.push((start + windowSamples / 2) / sampleRate);
+            rmsData.push(Math.sqrt(sum / windowSamples));
         }
-        tAxis.push((start + windowSamples / 2) / sampleRate);
-        rmsData.push(Math.sqrt(sum / windowSamples));
+    } else if (lastFrame && lastFrame.timeDomain) {
+        // Streaming mode: just compute current RMS and append to a rolling array
+        window._streamingRMS = window._streamingRMS || { t: [], y: [] };
+        const hist = window._streamingRMS;
+        
+        // Reset if we loop or seek backwards
+        if (hist.t.length > 0 && currentTime < hist.t[hist.t.length - 1]) {
+            hist.t = [];
+            hist.y = [];
+        }
+
+        let sum = 0;
+        const N = lastFrame.timeDomain.length;
+        for (let i = 0; i < N; i++) {
+            sum += lastFrame.timeDomain[i] * lastFrame.timeDomain[i];
+        }
+        const rms = Math.sqrt(sum / N);
+        
+        hist.t.push(currentTime);
+        hist.y.push(rms);
+        
+        // Keep last 300 values to prevent massive arrays
+        if (hist.t.length > 300) {
+            hist.t.shift();
+            hist.y.shift();
+        }
+        
+        tAxis = hist.t;
+        rmsData = hist.y;
     }
 
     const traces = [{

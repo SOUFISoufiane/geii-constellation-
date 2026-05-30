@@ -556,21 +556,58 @@
         </div>
 
         <!-- Audio Transport Bar — visible only in audio_analyzer mode -->
-        <div id="audio-transport-bar">
-            <div class="audio-transport-row">
-                <span class="audio-transport-btn" id="audio-play" title="Play">▶</span>
-                <span class="audio-transport-btn" id="audio-pause" title="Pause">⏸</span>
-                <span class="audio-transport-btn" id="audio-stop" title="Stop">⏹</span>
+        <div id="audio-transport-bar" class="retro-audio-deck" style="flex-direction:column; padding-bottom:8px;">
+            <!-- Controls Deck -->
+            <div class="retro-controls-deck" style="width:100%;">
+                <div class="retro-transport-group">
+                    <button class="retro-btn" id="audio-play" title="Play"><span class="icon" style="color:var(--accent-green)">▶</span></button>
+                    <button class="retro-btn" id="audio-pause" title="Pause"><span class="icon" style="color:var(--accent-gold)">⏸</span></button>
+                    <button class="retro-btn" id="audio-stop" title="Stop"><span class="icon" style="color:var(--accent-red)">⏹</span></button>
+                </div>
+                
+                <span id="audio-time-display" class="retro-time" style="font-size:0.8rem; margin-left:10px;">0:00.0 / 0:00.0</span>
+                
+                <input type="range" id="audio-scrubber" class="retro-scrubber" min="0" max="1000" value="0">
+                
+                <span id="audio-state-badge" class="retro-badge" style="margin-right:10px;">⏸ IDLE</span>
+                
+                <div class="retro-toggles-group">
+                    <label class="retro-toggle" title="Boucle (Loop)">
+                        <input type="checkbox" id="audio-loop-toggle">
+                        <span class="retro-led"></span> LOOP
+                    </label>
+                    <label class="retro-toggle" title="Lien avec le Filtre DSP (Param Board)">
+                        <input type="checkbox" id="audio-filter-toggle">
+                        <span class="retro-led filter-led"></span> FILTER
+                    </label>
+                </div>
 
-                <input type="range" id="audio-scrubber" min="0" max="1000" value="0" style="flex:1; margin:0 0.5rem;">
+                <div class="retro-sliders-group">
+                    <div class="retro-fader-wrap" title="Volume">
+                        <input type="range" id="audio-vol-slider" class="retro-fader" min="0" max="1" step="0.01" value="1.0">
+                        <span class="fader-lbl">VOL</span>
+                    </div>
+                    <div class="retro-fader-wrap" title="Speed">
+                        <input type="range" id="audio-spd-slider" class="retro-fader" min="0.5" max="2" step="0.05" value="1.0">
+                        <span class="fader-lbl">SPD</span>
+                    </div>
+                </div>
 
-                <span id="audio-time-display" style="font-family:'Space Mono',monospace;font-size:0.7rem;color:var(--accent-green);font-weight:700;min-width:100px;text-align:center;">
-                    0:00.0 / 0:00.0
-                </span>
-
-                <span id="audio-state-badge" style="font-family:'Space Mono',monospace;font-size:0.55rem;letter-spacing:0.12em;color:var(--text-dim);margin-left:auto;">
-                    ⏸ IDLE
-                </span>
+                <div class="retro-sliders-group" style="margin-left:10px; border-left:1px solid #333; padding-left:10px;">
+                    <div class="retro-fader-wrap" title="Decimator (Réduction Fréquence d'Échantillonnage)">
+                        <input type="range" id="audio-decimator-slider" class="retro-fader" min="1" max="32" step="1" value="1">
+                        <span class="fader-lbl">DECIM</span>
+                    </div>
+                    <div class="retro-fader-wrap" title="Bitcrush (Bruit de Quantification)">
+                        <input type="range" id="audio-bitcrush-slider" class="retro-fader" min="2" max="16" step="1" value="16">
+                        <span class="fader-lbl">BITS</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Piano Deck -->
+            <div id="piano-deck" style="display:flex; justify-content:center; align-items:flex-start; margin-top:8px; height:45px; gap:1px; width:100%; position:relative;">
+                <!-- Piano keys will be generated via JS -->
             </div>
         </div>
 
@@ -579,6 +616,22 @@
             <div class="panel relative" id="fusion-panel-container" style="flex:1; overflow:hidden;">
                 <div id="plot-fusion" style="width:100%; height:100%; z-index:1;"></div>
                 <canvas id="fusion-eq-canvas" class="absolute full-w full-h" style="top:0; left:0; z-index:2; pointer-events:none; display:none; mix-blend-mode: screen;"></canvas>
+                <!-- DSP HUD -->
+                <div id="fusion-hud" style="position:absolute; top:10px; right:10px; z-index:3; display:none; flex-direction:column; gap:5px; pointer-events:none; text-align:right;">
+                    <div style="background:rgba(0,0,0,0.6); padding:4px 8px; border-radius:4px; border:1px solid var(--rim); font-family:'Space Mono',monospace; backdrop-filter:blur(4px);">
+                        <span style="color:var(--text-dim); font-size:0.6rem;">PITCH (f₀)</span><br>
+                        <span id="hud-pitch" style="color:var(--accent-gold); font-size:0.8rem; font-weight:bold;">-- Hz</span>
+                        <span id="hud-note" style="color:var(--text-bright); font-size:0.7rem; margin-left:4px;">--</span>
+                    </div>
+                    <div style="background:rgba(0,0,0,0.6); padding:4px 8px; border-radius:4px; border:1px solid var(--rim); font-family:'Space Mono',monospace; backdrop-filter:blur(4px);">
+                        <span style="color:var(--text-dim); font-size:0.6rem;">ENERGY (RMS)</span><br>
+                        <span id="hud-rms" style="color:var(--accent-red); font-size:0.8rem; font-weight:bold;">-- dBFS</span>
+                    </div>
+                    <div style="background:rgba(0,0,0,0.6); padding:4px 8px; border-radius:4px; border:1px solid var(--rim); font-family:'Space Mono',monospace; backdrop-filter:blur(4px);">
+                        <span style="color:var(--text-dim); font-size:0.6rem;">CENTROID</span><br>
+                        <span id="hud-centroid" style="color:var(--accent-cyan); font-size:0.8rem; font-weight:bold;">-- Hz</span>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -588,22 +641,28 @@
                 <span class="mono" style="font-size:0.55rem; color:var(--text-dim); letter-spacing:0.13em;">
                     ◉ RAW TELEMETRY FEEDS
                 </span>
+                <select id="telemetry-mode-selector" style="background:rgba(0,0,0,0.5);border:1px solid var(--rim);color:var(--text-bright);font-family:'Space Mono',monospace;font-size:0.55rem;padding:0.2rem 0.35rem;border-radius:4px;outline:none;cursor:pointer">
+                    <option value="geii">① GEII Fundamentals (s(t), |S(f)|, φ, Winding)</option>
+                    <option value="job">② Audio Engineering (Scope, Waterfall, THD, Z-Plane)</option>
+                    <option value="sys">③ Systems Control (Bode Mag, Bode Phase, Step, Nyquist)</option>
+                    <option value="acoustic">④ Advanced Acoustics (Chroma, RMS, Harm/Perc, Cents)</option>
+                </select>
             </div>
             <div style="flex:1; display:grid; grid-template-columns:repeat(4,1fr); gap:0.5rem; min-height:0;">
                 <div class="panel">
-                    <span class="panel-label"><span class="num">①</span>TEMPOREL s(t)</span>
+                    <span class="panel-label" id="label-raw-1"><span class="num">①</span>TEMPOREL s(t)</span>
                     <div id="plot-raw-time" style="width:100%; height:100%;"></div>
                 </div>
                 <div class="panel">
-                    <span class="panel-label"><span class="num">②</span>AMPLITUDE |S(f)|</span>
+                    <span class="panel-label" id="label-raw-2"><span class="num">②</span>AMPLITUDE |S(f)|</span>
                     <div id="plot-raw-mag" style="width:100%; height:100%;"></div>
                 </div>
                 <div class="panel">
-                    <span class="panel-label"><span class="num">③</span>PHASE φ(f)</span>
+                    <span class="panel-label" id="label-raw-3"><span class="num">③</span>PHASE φ(f)</span>
                     <div id="plot-raw-phase" style="width:100%; height:100%;"></div>
                 </div>
                 <div class="panel">
-                    <span class="panel-label"><span class="num">④</span>ENROULEMENT 2D</span>
+                    <span class="panel-label" id="label-raw-4"><span class="num">④</span>ENROULEMENT 2D</span>
                     <div id="plot-raw-circle" style="width:100%; height:100%;"></div>
                 </div>
             </div>
