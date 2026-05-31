@@ -1,5 +1,7 @@
 # GEII Visual Toolbox (geii-constellation)
 
+🔗 **[Version Web en ligne : geii.qzz.io](https://geii.qzz.io)**
+
 *[Read in English](README.md)*
 
 > "Dis-le-moi et je l'oublierai, enseigne-le-moi et je m'en souviendrai peut-être, implique-moi et j'apprendrai." — Benjamin Franklin
@@ -41,7 +43,10 @@ Forkez-le. Améliorez-le. Appropriez-le-vous 😊
 **Prérequis :** [Git](https://git-scm.com/), [Node.js](https://nodejs.org/)
 
 ### 1. La version Web (Sans installation)
-L'application web principale se trouve dans le dossier `Maths`. Ouvrez simplement `Maths/index.html` dans votre navigateur web favori ! Elle s'exécute entièrement en local.
+L'application web principale est hébergée en ligne et entièrement gratuite.
+👉 **[Lancer GEII Visual Toolbox dans votre Navigateur](https://geii.qzz.io)**
+
+*(Alternativement, vous pouvez ouvrir `Maths/index.html` localement dans votre navigateur)*
 
 ### 2. Application de bureau (Développement)
 Clonez le dépôt et exécutez l'application Electron complète localement. Fonctionne parfaitement sur Windows, Mac, Linux et WSL.
